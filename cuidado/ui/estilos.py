@@ -199,6 +199,21 @@ def aplicar_estilos():
                 color: #31333F;
                 border-radius: 14px;
             }
+            button:focus-visible,
+            input:focus-visible,
+            [role="combobox"]:focus-visible,
+            [role="radio"]:focus-visible,
+            [role="option"]:focus-visible {
+                outline: 3px solid #F59E0B !important;
+                outline-offset: 3px !important;
+            }
+            [data-testid="stButton"] button {
+                min-height: 2.8rem;
+                font-weight: 700;
+            }
+            [data-testid="stSidebar"] {
+                border-right: 1px solid rgba(91, 33, 182, 0.14);
+            }
             [data-testid="stDataFrame"] {
                 border-radius: 12px;
                 overflow: hidden;

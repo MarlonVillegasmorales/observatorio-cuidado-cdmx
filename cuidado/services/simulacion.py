@@ -1,5 +1,6 @@
 """Escenario sintético reproducible, aislado de cualquier base operativa."""
 from datetime import time
+from dataclasses import replace
 from cuidado.domain.centros import Necesidad, Oferta, recomendar
 
 def escenario():
@@ -15,3 +16,16 @@ def escenario():
 def ejecutar_demo(radio_km=10):
     solicitudes,ofertas=escenario()
     return recomendar(solicitudes,ofertas,radio_km)
+
+def ejecutar_busqueda(tipo, inicio, fin, dias, radio_km=10):
+    """Evalúa una solicitud sintética con el mismo motor explicable del dominio."""
+    solicitudes, ofertas = escenario()
+    solicitud = replace(
+        solicitudes[0],
+        solicitud_id="demo-usuario",
+        tipo=tipo,
+        inicio=inicio,
+        fin=fin,
+        dias=frozenset(dias),
+    )
+    return recomendar([solicitud], ofertas, radio_km)

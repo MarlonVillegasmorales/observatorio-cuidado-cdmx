@@ -119,7 +119,7 @@ def _crear_mapa(dataset: pd.DataFrame, metrica: str) -> folium.Map:
             f"{fila['matricula_caci_infantes']:,.0f}<br>"
             f"<strong>Guarderías:</strong> {fila['No_Guard']:,.0f}<br>"
             f"<strong>Estimación territorial:</strong> {fila['estimacion_cuidadores_sin_trabajo_mercado']:,.0f} "
-            "personas dejaron su empleo para cuidar."
+            "personas en cuidado sin trabajo de mercado."
             "</div>"
         )
         folium.GeoJson(
@@ -260,13 +260,13 @@ def mostrar_visor_territorial(dataset, es_movil: bool = False) -> None:
         (
             "👩",
             "Brecha de Género",
-            "<strong>75%</strong> de la carga recae en mujeres sin compensación.",
+            "Distribución desigual del trabajo de cuidado no remunerado.",
             "#DB2777",
         ),
         (
             "🏢",
             "Brecha de Formalidad",
-            "<strong>80%</strong> del sector opera en la informalidad.",
+            "Diferencias de acceso a trabajo de cuidado formal.",
             "#0F766E",
         ),
     ]
@@ -287,6 +287,11 @@ def mostrar_visor_territorial(dataset, es_movil: bool = False) -> None:
             unsafe_allow_html=True,
         )
     mapa = _crear_mapa(dataset, metrica)
+    st.caption(
+        "Alternativa textual al mapa: la tabla siguiente lista las 16 alcaldías "
+        "con población que requiere cuidado, guarderías, cobertura CACI y la "
+        "estimación territorial seleccionada. El mapa usa esos mismos datos."
+    )
     _ = st_folium(mapa, use_container_width=True, height=390 if es_movil else 560)
     st.markdown(
         f'<div class="source-strip"><p>{FUENTE_ACADEMICA}</p></div>',
