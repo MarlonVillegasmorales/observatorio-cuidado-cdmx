@@ -13,6 +13,43 @@ administrar el despliegue inicial de Community Cloud desde el repositorio
 activo. Las personas colaboradoras pueden aportar código según sus permisos
 de GitHub, pero no es necesario que Karla cree el despliegue.
 
+## Procedimiento posterior al rediseño visual
+
+Esta fase se mantiene en la rama `rediseno-visual`; no se publica
+automáticamente. Después de revisar el resultado local:
+
+1. Revisar y aprobar las cuatro secciones en computadora y celular.
+2. Crear el commit de los cambios pertinentes.
+3. Subir `rediseno-visual` al repositorio propio.
+4. Crear y revisar un pull request hacia `main`.
+5. Integrar el PR después de las comprobaciones.
+6. Verificar que Streamlit procese la nueva revisión de `main`.
+7. Revisar logs y comprobar las cuatro secciones publicadas.
+8. Comprobar acceso sin sesión y desde celular con datos móviles.
+
+El despliegue conserva Python 3.12 y `app_dashboard.py`; un cambio visual no
+requiere eliminar ni recrear la aplicación. Si una regresión aparece después de
+integrar, revertir el commit de integración con un commit nuevo (`git revert
+<commit>`), revisar y publicar ese revert; no reescribir el historial
+compartido.
+
+## Validación local del rediseño
+
+La revisión del rediseño se realiza con el intérprete propio:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m streamlit run app_dashboard.py
+```
+
+Se deben revisar las cuatro secciones en anchos de 360, 390, 768 y 1440 px,
+incluidas orientación horizontal y zoom de 200 %. La revisión debe comprobar
+el recorrido completo de búsqueda, los estados de resultados pendientes, el
+mapa, las tablas, las etiquetas y el foco de teclado, así como que no exista
+desplazamiento horizontal general. Las capturas de navegador son evidencia de
+emulación de ancho, no certificación de un teléfono real ni de accesibilidad
+completa. La URL pública no cambia hasta integrar el PR en `main`.
+
 ## Configuración inicial
 
 En https://share.streamlit.io/ → Create app, desde un repositorio existente:

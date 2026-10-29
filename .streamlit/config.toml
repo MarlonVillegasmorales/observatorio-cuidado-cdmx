@@ -1,8 +1,13 @@
 [theme]
-primaryColor = "#5B21B6"
-backgroundColor = "#F6F7FB"
+primaryColor = "#6D28D9"
+backgroundColor = "#F8FAFC"
 secondaryBackgroundColor = "#FFFFFF"
-textColor = "#1F2937"
+textColor = "#172033"
+[theme.sidebar]
+primaryColor = "#6D28D9"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F1F5F9"
+textColor = "#172033"
 [server]
 headless = true
 [browser]

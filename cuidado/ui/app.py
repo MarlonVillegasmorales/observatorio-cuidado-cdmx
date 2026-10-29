@@ -23,15 +23,17 @@ def _navegar(paso):
     st.session_state["paso_busqueda"] = paso
 
 def _render_busqueda():
+    st.markdown('<div class="section-kicker">Exploración guiada</div>', unsafe_allow_html=True)
     st.header("Probar una búsqueda de cuidado")
     st.warning(
-        "Esta búsqueda usa datos completamente sintéticos. Una recomendación "
-        "no confirma una plaza real ni registra personas."
+        "Demostración con datos sintéticos: una recomendación no confirma "
+        "una plaza real ni registra personas."
     )
     if "paso_busqueda" not in st.session_state:
         st.session_state["paso_busqueda"] = 1
     paso = st.session_state["paso_busqueda"]
-    st.progress(paso / 4, text=f"Paso {paso} de 4")
+    nombres_pasos = {1: "Servicio", 2: "Horario", 3: "Distancia", 4: "Resultados"}
+    st.progress(paso / 4, text=f"Paso {paso} de 4 · {nombres_pasos[paso]}")
     st.caption("Puedes avanzar y regresar; tus respuestas se conservan.")
 
     tipo = st.selectbox(
@@ -125,13 +127,22 @@ def _render_busqueda():
             st.caption("Resultado demostrativo; requiere verificación institucional y no confirma una plaza.")
 
 def main():
-    st.set_page_config(page_title='Observatorio del Cuidado CDMX',layout='wide')
+    st.set_page_config(
+        page_title="Observatorio del Cuidado CDMX",
+        page_icon="♥",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
     aplicar_estilos()
     st.markdown('<div class="brand-mark"><span aria-hidden="true">♥</span> Observatorio del cuidado</div>', unsafe_allow_html=True)
-    st.title('Economía del cuidado en CDMX')
-    st.caption('Segundo avance · explora datos territoriales y una búsqueda sintética')
+    st.markdown(
+        '<div class="page-intro"><h1>Economía del cuidado en CDMX</h1>'
+        "<p>Explora datos territoriales y prueba una búsqueda sintética.</p>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
     pagina = st.sidebar.radio(
-        "¿Qué quieres hacer?",
+        "Navegación principal",
         list(TAREAS),
     )
     st.sidebar.caption(TAREAS[pagina])
@@ -140,22 +151,38 @@ def main():
             data=evidencia()
         except (FileNotFoundError,ValueError) as error:
             st.error(str(error)); return
-        st.info('Los indicadores combinan años y poblaciones de referencia distintos. La estimación territorial de cuidado sin trabajo de mercado no mide abandono laboral ni causalidad.')
+        st.info(
+            "Los indicadores combinan años y poblaciones de referencia distintos. "
+            "La estimación territorial de cuidado sin trabajo de mercado no mide "
+            "abandono laboral ni causalidad."
+        )
         _metricas_principales(data)
         if pagina=='Conocer mi zona': mostrar_visor_territorial(data)
         else: mostrar_comparativo_cuidado(data)
     elif pagina=='Probar una búsqueda de cuidado':
         _render_busqueda()
     else:
-        st.header('Información del proyecto')
-        st.subheader('Entregas pendientes del equipo')
-        st.dataframe(pd.DataFrame(INTEGRACIONES),hide_index=True,use_container_width=True)
-        st.info('Los módulos se incorporarán tras validar sus contratos de entrada y salida. No se muestran ahorros ni recaudaciones inventadas.')
+        st.markdown('<div class="section-kicker">Sobre este proyecto</div>', unsafe_allow_html=True)
+        st.header("Información del proyecto")
+        st.markdown(
+            '<div class="section-card"><p><strong>Propósito:</strong> '
+            "convertir datos de cuidado en evidencia para decisiones y explorar "
+            "vinculación con centros comunitarios.</p><p><strong>Alcance actual:</strong> "
+            "observatorio territorial para 16 alcaldías y una búsqueda sintética. "
+            "No registra personas ni confirma plazas.</p></div>",
+            unsafe_allow_html=True,
+        )
         with st.expander("Fuentes, definiciones y límites", expanded=True):
             st.markdown('''El observatorio conserva las fuentes tabulares y cartográficas del repositorio. ENUT describe CDMX; la distribución proporcional por alcaldía es exploratoria.
 
-El dato de horas de mujeres cuidadoras procede del resumen ENUT, separado de los indicadores macroeconómicos. El conteo de infraestructura no demuestra cupos disponibles.
+El dato de horas de mujeres cuidadoras procede del resumen ENUT, separado de los indicadores macroeconómicos. CACI significa Centros de Atención y Cuidado Infantil; la infraestructura contabilizada no demuestra cupos disponibles.
 
 El matching demostrativo exige tipo de servicio, días, horario, radio y cupo. No es un modelo entrenado para predecir inserción laboral y no sustituye verificación institucional.
 
 La aplicación pública no recoge datos personales. Antes de habilitar operación real faltan autenticación, autorización por rol, protocolo de privacidad, verificación de centros, migración de registros y seguimiento del piloto.''')
+        st.subheader("Estado académico y entregas internas")
+        st.dataframe(pd.DataFrame(INTEGRACIONES), hide_index=True, use_container_width=True)
+        st.info(
+            "Los módulos se incorporarán tras validar sus contratos de entrada "
+            "y salida. No se muestran ahorros ni recaudaciones inventadas."
+        )
