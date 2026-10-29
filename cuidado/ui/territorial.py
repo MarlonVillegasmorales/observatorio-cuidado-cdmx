@@ -189,7 +189,7 @@ def _mostrar_contexto_enut(dataset: pd.DataFrame) -> None:
         ),
         ("Población que cuida", f"{indicadores['enut_porcentaje_que_cuida']:.1f}%"),
         (
-            "Horas semanales entre mujeres cuidadoras (ENUT)",
+            "Horas semanales de cuidado de mujeres (ENUT)",
             f"{indicadores['enut_horas_cuidado_mujeres']:.1f}",
         ),
         (
@@ -414,7 +414,7 @@ def mostrar_comparativo_cuidado(
         "Estimación: cuidado sin trabajo de mercado": {
             "columna": "estimacion_cuidadores_sin_trabajo_mercado",
             "formato": "{:,.0f}",
-            "descripcion": "Mayor valor = mayor impacto laboral asociado al cuidado.",
+            "descripcion": "Mayor valor = mayor estimación territorial; no mide un efecto laboral.",
         },
         "Cobertura CACI (0-2)": {
             "columna": "cobertura_caci_0_2_pct",
