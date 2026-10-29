@@ -11,7 +11,7 @@
 | Plantilla empresarial | Contrato y estado pendiente | Entrega de Karla |
 | B2B/B2G | Sin resultados financieros fabricados | Entrega de Azael |
 | Informe | Arquitectura/limitaciones documentadas | Documento académico, protocolo y evidencias reales |
-| Despliegue | Configuración y guía | Karla crea app con permiso admin |
+| Despliegue | Configuración y guía | Marlon puede crear y administrar la app desde la cuenta propietaria; falta evidencia de despliegue |
 
 La simulación no acredita tiempo liberado, empleo formal, convenio comunitario
 ni impacto económico. No declarar finalizado el proyecto con esta migración.
