@@ -7,15 +7,11 @@ conexión usada en KarlaKsanova/ECONOMIA-DEL-CUIDADO. El repositorio pertenece
 a una cuenta personal. Ser colaborador permite aportar código; el despliegue
 inicial de Community Cloud exige permisos de administración.
 
-Ruta operativa: Karla conecta su GitHub a Streamlit y crea la app. El equipo
-continúa trabajando en el repositorio compartido. Los cambios integrados en
-la rama desplegada actualizan la aplicación; no se necesita transferir
-propiedad para cada actualización.
-
-Alternativa si Marlon debe controlar el despliegue: fork en su cuenta y app
-conectada al fork, con sincronización explícita desde el repositorio original.
-Un fork no recibe automáticamente los cambios del equipo. Una organización
-con roles es otra decisión de propiedad, no requisito de esta migración.
+El repositorio de trabajo para esta copia es
+`MarlonVillegasmorales/observatorio-cuidado-cdmx`. El repositorio original se
+conserva como `upstream`:
+`KarlaKsanova/ECONOMIA-DEL-CUIDADO`. Los cambios deben publicarse en `origin`;
+no se debe hacer push a `upstream`.
 
 ## Configuración inicial
 
@@ -23,14 +19,14 @@ En https://share.streamlit.io/ → Create app, desde un repositorio existente:
 
 | Campo | Valor |
 |---|---|
-| Repository | KarlaKsanova/ECONOMIA-DEL-CUIDADO |
-| Branch de revisión | codex/arquitectura-segundo-avance |
+| Repository | MarlonVillegasmorales/observatorio-cuidado-cdmx |
+| Branch de revisión | main |
 | Main file path | app_dashboard.py |
 | Python en Advanced settings | 3.12 |
 | Secrets | Ninguno para este demo público |
 
-Para producción académica, usar main después de integrar el PR y ajustar la
-rama de despliegue. requirements.txt está en la raíz. Community Cloud no
+`main` contiene la versión completa del segundo avance y la mejora de
+experiencia de usuario. `requirements.txt` está en la raíz. Community Cloud no
 necesita el Dockerfile. El dataset preparado público viaja con el código.
 
 El demo no persiste información operativa y no necesita Neon ni otra base.

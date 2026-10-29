@@ -4,6 +4,13 @@ Segundo avance: monolito modular en Python/Streamlit. Observatorio de las 16
 alcaldías y demostración sintética de vinculación con centros comunitarios.
 No es una plataforma de contratación de personas cuidadoras.
 
+Esta copia se publica en
+[MarlonVillegasmorales/observatorio-cuidado-cdmx](https://github.com/MarlonVillegasmorales/observatorio-cuidado-cdmx).
+Conserva el historial y los créditos del proyecto original
+[KarlaKsanova/ECONOMIA-DEL-CUIDADO](https://github.com/KarlaKsanova/ECONOMIA-DEL-CUIDADO),
+configurado como `upstream` para consultar avances del equipo. El origen
+habitual de publicación es `origin`.
+
 ## Ejecución local (Python 3.12)
 
 Desde la raíz del repositorio:
@@ -28,6 +35,7 @@ python -m pytest -q
 
 - [Arquitectura y límites](docs/ARQUITECTURA.md)
 - [Despliegue y permisos](docs/STREAMLIT.md)
+- [Inventario del repositorio](docs/INVENTARIO_REPOSITORIO.md)
 - [Contratos de integración del equipo](docs/CONTRATOS.md)
 - [Requisitos y pendientes del segundo avance](docs/SEGUNDO_AVANCE.md)
 - [Contexto para el equipo y Copilot](CONTEXTO_PROYECTO.md)
