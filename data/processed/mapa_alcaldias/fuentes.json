@@ -1,0 +1,38 @@
+[
+  {
+    "id_fuente": "censo_inegi_iter_2020",
+    "institucion": "INEGI",
+    "titulo": "Censo de Población y Vivienda 2020, ITER por localidad",
+    "url": "https://www.inegi.org.mx/contenidos/programas/ccpv/2020/datosabiertos/iter/iter_00_cpv2020_csv.zip",
+    "fecha_descarga": "2026-10-29",
+    "periodo_dato": "2020",
+    "cobertura": "Localidades de México; agregado a 16 alcaldías de CDMX",
+    "archivo": "data\\raw\\iter_00_cpv2020_csv.zip",
+    "sha256": "9342fdbd45bda5897f2b827a12904843b6f8fb85d4e72da299e09e4d2422ab60",
+    "reutilizacion": "Fuente oficial; variables y diccionario incluidos en el paquete."
+  },
+  {
+    "id_fuente": "limites_alcaldias_inegi_cdmx",
+    "institucion": "Gobierno de CDMX / INEGI",
+    "titulo": "Límite de Alcaldías (áreas geoestadísticas municipales)",
+    "url": "https://datos.cdmx.gob.mx/dataset/alcaldias/resource/8648431b-4f34-4f1a-a4b1-19142f944300",
+    "fecha_descarga": "2026-10-29",
+    "periodo_dato": "Marco geoestadístico publicado en el recurso",
+    "cobertura": "16 alcaldías de CDMX",
+    "archivo": "data\\raw\\limites_alcaldias_cdmx_oficial.zip",
+    "sha256": "d1fca41631a5b61fb3d5e8d723d82f428c9b4b656db92beab2859b36bd55fad0",
+    "reutilizacion": "Se transformó a GeoJSON EPSG:4326 sin simplificación adicional."
+  },
+  {
+    "id_fuente": "equipamiento_asistencia_social_historico",
+    "institucion": "CentroGeo / IPDP (metadatos locales)",
+    "titulo": "Equipamiento de asistencia social por colonia",
+    "url": null,
+    "fecha_descarga": null,
+    "periodo_dato": "2020-2021 (metadatos locales)",
+    "cobertura": "Capa histórica de equipamiento, no límites territoriales",
+    "archivo": "visualizacion\\Equipamiento_de_asistencia_social.shp",
+    "sha256": "fd862539362d7da01b876f371d749ab6d742678348c44b02e2bf5c03a990f7fb",
+    "reutilizacion": "Sólo auditoría; no forma parte del conjunto público."
+  }
+]

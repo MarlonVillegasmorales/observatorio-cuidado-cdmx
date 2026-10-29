@@ -67,11 +67,11 @@ este proyecto.
 
 | Función | Código y acceso | Estado comprobable |
 |---|---|---|
-| Conocer mi zona | `cuidado/ui/app.py`, opción de Streamlit y `cuidado/ui/territorial.py` | Implementada localmente; indicadores y límites requieren auditoría analítica. |
-| Comparar zonas | `cuidado/ui/app.py` y `mostrar_comparativo_cuidado` | Implementada localmente; no es evaluación de impacto. |
+| Mapa por alcaldía | `cuidado/ui/app.py`, `cuidado/ui/mapa_alcaldias.py` | Implementado localmente con límites oficiales y población INEGI 2020; no es evaluación de impacto. |
+| Comparar zonas | `cuidado/ui/app.py` y `mostrar_comparativo_alcaldias` | Implementado con población total y 0–4 verificados; no es evaluación de impacto. |
 | Probar una búsqueda | `_render_busqueda` en `cuidado/ui/app.py` | Implementada como demo sintética de cuatro pasos; conserva valores y marca resultados pendientes al cambiar filtros. |
 | Información del proyecto | `cuidado/ui/app.py` e `INTEGRACIONES` | Visible; muestra entregas pendientes, no las convierte en módulos recibidos. |
-| ETL y datos preparados | `cuidado/pipelines/`, `data/processed/` | Código y artefactos versionados; la procedencia y comparabilidad de cada fuente siguen requiriendo validación. |
+| ETL y datos preparados | `cuidado/pipelines/`, `data/processed/mapa_alcaldias/` | Código y artefactos reproducibles con fuentes oficiales de cartografía e INEGI 2020; infraestructura histórica excluida. |
 | Matching demostrativo | `cuidado/domain/centros.py`, `cuidado/services/simulacion.py` | Implementado y probado localmente; greedy por orden de solicitudes, no modelo predictivo entrenado. |
 | Persistencia y confirmación interna | `cuidado/database/`, `cuidado/services/vinculacion.py` | Código y pruebas locales; no está expuesto en la interfaz pública ni validado con PostgreSQL o personas reales. |
 
@@ -113,8 +113,10 @@ detallada está en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
 ## Fuentes, vinculación y privacidad
 
-El dataset preparado combina fuentes territoriales, cartográficas, CACI, ENUT
-y datos macroeconómicos con años, poblaciones y granularidades distintas.
+El dataset operativo general conserva fuentes territoriales, CACI, ENUT y
+datos macroeconómicos con años, poblaciones y granularidades distintas. El
+conjunto público del mapa usa únicamente cartografía oficial y población
+INEGI 2020 verificadas.
 `data/processed/observatorio.metadata.json` y `calidad.json` acompañan el
 resultado. Se distinguen observaciones, estimaciones, proyecciones y datos
 sintéticos; la procedencia de algunos insumos debe confirmarse con el equipo.

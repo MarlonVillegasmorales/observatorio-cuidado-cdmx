@@ -1,0 +1,68 @@
+{
+  "version": "mapa-alcaldias-v2",
+  "fecha_generacion": "2026-10-29",
+  "alcaldias": 16,
+  "claves_unicas": true,
+  "claves_esperadas": [
+    "09 002",
+    "09 003",
+    "09 004",
+    "09 005",
+    "09 006",
+    "09 007",
+    "09 008",
+    "09 009",
+    "09 010",
+    "09 011",
+    "09 012",
+    "09 013",
+    "09 014",
+    "09 015",
+    "09 016",
+    "09 017"
+  ],
+  "crs_salida": "EPSG:4326",
+  "geometrias_validas": 16,
+  "geometrias_vacias": 0,
+  "simplificacion": "No se aplicó simplificación adicional.",
+  "uniones_sin_perdidas": true,
+  "unicidad_indicadores": true,
+  "faltantes_indicadores": {
+    "clave_alcaldia": 0,
+    "alcaldia": 0,
+    "periodo": 0,
+    "granularidad": 0,
+    "id_fuente": 0,
+    "tipo": 0,
+    "estado_disponibilidad": 0,
+    "id_indicador": 0,
+    "valor": 0,
+    "unidad": 0,
+    "poblacion": 0
+  },
+  "porcentajes_fuera_de_rango": 0,
+  "divisiones_por_cero": 0,
+  "coherencia_grupos_edad": {
+    "diferencia_maxima": 0.0,
+    "filas_conciliadas": 16,
+    "filas": 16
+  },
+  "conciliacion_totales_oficiales": {
+    "estado": "verificada",
+    "motivo": "Los valores proceden del ITER 2020 oficial de INEGI."
+  },
+  "discrepancias": [
+    "El conteo histórico de equipamiento se excluyó por procedencia y definición no verificadas.",
+    "Edad no especificada es un residual documentado y no se redistribuye."
+  ],
+  "indicadores_excluidos": [
+    "cobertura_caci_0_2_pct",
+    "poblacion_total_infantes_0_2",
+    "personas_afectadas",
+    "estimacion_cuidadores_sin_trabajo_mercado",
+    "guarderias_por_1000_habitantes",
+    "guarderias_conteo",
+    "discapacidad_total",
+    "discapacidad_porcentaje"
+  ]
+}

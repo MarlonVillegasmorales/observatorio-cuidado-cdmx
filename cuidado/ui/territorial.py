@@ -231,61 +231,6 @@ def mostrar_visor_territorial(dataset, es_movil: bool = False) -> None:
         horizontal=not es_movil,
     )
     _mostrar_contexto_enut(dataset)
-    st.markdown(
-        """
-        <div class="structural-gaps">
-            <div class="section-kicker">Eje central del análisis</div>
-            <h2>Las 4 Brechas Estructurales del cuidado</h2>
-            <p class="structural-gaps-intro">
-                El mapa permite observar cómo estas desigualdades se expresan
-                territorialmente en la Ciudad de México.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    brechas = [
-        (
-            "🌍",
-            "Brecha Geográfica",
-            "Concentración urbana vs. déficit rural.",
-            "#2563EB",
-        ),
-        (
-            "👵",
-            "Brecha Generacional",
-            "Demanda por envejecimiento vs. oferta pública.",
-            "#7C3AED",
-        ),
-        (
-            "👩",
-            "Brecha de Género",
-            "Distribución desigual del trabajo de cuidado no remunerado.",
-            "#DB2777",
-        ),
-        (
-            "🏢",
-            "Brecha de Formalidad",
-            "Diferencias de acceso a trabajo de cuidado formal.",
-            "#0F766E",
-        ),
-    ]
-    columnas_brechas = st.columns(4)
-    for columna, (icono, titulo, descripcion, acento) in zip(
-        columnas_brechas, brechas
-    ):
-        columna.markdown(
-            f"""
-            <div class="structural-gap-card" style="--gap-accent: {acento};">
-                <div class="structural-gap-icon" role="img" aria-label="{titulo}">
-                    {icono}
-                </div>
-                <h3>{titulo}</h3>
-                <p>{descripcion}</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
     mapa = _crear_mapa(dataset, metrica)
     st.caption(
         "Alternativa textual al mapa: la tabla siguiente lista las 16 alcaldías "
@@ -545,10 +490,13 @@ def mostrar_comparativo_cuidado(
                     f"**Personas afectadas:** {formato_comparativo['Personas afectadas'].format(fila_ranking['Personas afectadas'])}"
                 )
     else:
+        def resaltar_seleccionada(fila_ranking: pd.Series) -> list[str]:
+            color = "background-color: #EDE9FE; color: #172033; border-left: 3px solid #6D28D9;"
+            return [color if fila_ranking["Alcaldía"] == zona else "" for _ in fila_ranking]
+
         st.dataframe(
-            tabla.style.format(formato_comparativo).background_gradient(
-                subset=list(formato_comparativo),
-                cmap="Purples",
+            tabla.style.format(formato_comparativo).apply(
+                resaltar_seleccionada, axis=1
             ),
             use_container_width=True,
             hide_index=True,
