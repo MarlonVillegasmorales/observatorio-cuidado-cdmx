@@ -13,14 +13,14 @@ administrar el despliegue inicial de Community Cloud desde el repositorio
 activo. Las personas colaboradoras pueden aportar código según sus permisos
 de GitHub, pero no es necesario que Karla cree el despliegue.
 
-## Procedimiento posterior al rediseño visual
+## Procedimiento posterior a la navegación progresiva
 
-La tercera entrega se prepara en la rama `mapa-alcaldias`; no se publica
-automáticamente. Después de revisar el resultado local:
+La navegación progresiva se prepara en la rama `navegacion-progresiva`; no se
+publica automáticamente. Después de revisar el resultado local:
 
 1. Revisar y aprobar las cuatro secciones en computadora y celular.
 2. Crear el commit de los cambios pertinentes.
-3. Subir `mapa-alcaldias` al repositorio propio.
+3. Subir `navegacion-progresiva` al repositorio propio.
 4. Crear y revisar un pull request hacia `main`.
 5. Integrar el PR después de las comprobaciones.
 6. Verificar que Streamlit procese la nueva revisión de `main`.
@@ -50,53 +50,52 @@ desplazamiento horizontal general. Las capturas de navegador son evidencia de
 emulación de ancho, no certificación de un teléfono real ni de accesibilidad
 completa. La URL pública no cambia hasta integrar el PR en `main`.
 
-La navegación del rediseño se mantiene en el flujo de la página mediante un
-radio nativo horizontal que se adapta y envuelve en pantallas estrechas. No se
-fija al borde inferior: así evita tapar el mapa, tablas, atribuciones y el
-contenido final, y conserva un único control accesible para computadora y
-celular.
+La navegación progresiva se organiza en cinco destinos: Inicio, Mapa,
+Comparar, Búsqueda demo y Proyecto. En computadora se presenta con botones
+nativos horizontales; en celular se abre con el botón visible `Menú` y
+ofrece una lista vertical de botones amplios. Ambos mecanismos escriben la
+misma clave `seccion_activa`, por lo que los accesos de Inicio y el menú no
+crean estados paralelos. La barra lateral no contiene la navegación.
 
-### Comprobaciones del mapa `mapa-alcaldias`
+Inicio sólo explica el propósito y ofrece accesos directos. El mapa muestra
+primero el selector y el mapa completo; las tarjetas, el gráfico y la tabla
+aparecen después de elegir una alcaldía. `Ver todos los datos` y `Fuentes y
+cómo interpretar estos datos` agrupan el detalle solicitado sin ocultar la
+advertencia esencial sobre el Censo 2020 y sus límites. Comparar conserva sus
+controles sin repetir el mapa ni los totales generales, mientras que Búsqueda
+demo conserva sus respuestas al cambiar de destino.
 
-Realizadas el 29 de octubre de 2026 con Python 3.12 y el servidor local
-`http://localhost:8501`:
+### Comprobaciones de navegación progresiva
 
-- Se recorrieron **Mapa por alcaldía**, **Comparar**, **Búsqueda demo** y
-  **Proyecto**.
-- Se revisaron 360, 390, 768 y 1440 px; en todos los casos
-  `scrollWidth == clientWidth`, sin desplazamiento horizontal general.
-- Se generaron capturas de las cuatro secciones a 1440 px y 390 px.
-- Se comprobó que la navegación se envuelve en celular, conserva etiquetas
-  legibles y que los controles de búsqueda permanecen operables.
-- Se verificó que el mapa y los gráficos permanecen dentro del contenedor y
-  que las tablas se muestran dentro de su componente propio.
-- Se completó la búsqueda con clics normales hasta resultados y se verificó el
-  estado de resultado sintético.
-- Se recorrieron controles con teclado; los campos, radios y botones mostraron
-  foco visible con el esquema de foco de la interfaz.
-- Se aplicó zoom real del navegador al 200 % (`devicePixelRatio` 2.0) y no
-  apareció overflow horizontal (`scrollWidth == clientWidth`).
-- La suite existente pasó: `17 passed`; también pasó `git diff --check`.
-- Se verificaron tres alcaldías, incluida Iztapalapa, por lista y mediante
-  clic normal en un polígono; se confirmó la clave esperada y el nombre del
-  panel en cada selección.
-- El comparativo sólo ofrece población total y 0–4 años del conjunto oficial.
-- La regeneración ejecutada fue
-  `.\.venv\Scripts\python.exe -m cuidado.pipelines.mapa_alcaldias`.
+Realizadas con Python 3.12 y el servidor local `http://localhost:8501`:
+
+- La suite existente pasó: `18 passed`; también pasó `git diff --check`.
+- Se comprobaron Inicio, Mapa, Comparar, Búsqueda demo y Proyecto mediante
+  clic normal.
+- Se comprobó el menú móvil a 390 px: botón visible, lista vertical,
+  selección con `Tab` y `Enter`, y cierre después de elegir un destino.
+- Se comprobó el mapa sin selección: selector, mapa completo y advertencia
+  esencial, sin tarjetas ni gráfico de detalle.
+- Se seleccionó Iztapalapa y se comprobaron sus tres tarjetas, el gráfico,
+  `Ver todos los datos` y `Fuentes y cómo interpretar estos datos`.
+- Se restableció `Ver toda CDMX` y se confirmó que desaparece el detalle.
+- La búsqueda conservó sus respuestas al cambiar filtros y mostró el aviso
+  de resultados pendientes de actualizar.
+- La revisión visual incluyó emulación a 390 y 1440 px. No se realizó una
+  prueba en teléfono físico ni una certificación completa de accesibilidad.
 
 ### Limitaciones y pruebas pendientes
 
 - Las capturas son emulación del navegador, no una prueba en teléfonos físicos.
+- Quedan pendientes las comprobaciones específicas a 360 y 768 px con
+  zoom real al 200 %, además de orientación horizontal, lector de pantalla y
+  teclado en cada navegador objetivo.
 - No se certificó con hardware real el área segura inferior ni lectores de
   pantalla.
-- El componente de tabla conserva controles propios de Streamlit; su
-  interacción completa con teclado y ampliación debe revisarse manualmente en
-  cada navegador objetivo.
 - Las advertencias de Vega-Lite, deprecación de `use_container_width` y
   `DtypeWarning` del ITER son advertencias de dependencias o lectura de la
   fuente; no invalidaron los resultados, pero deben revisarse si se actualizan
   dependencias.
-- No se probó teléfono físico ni lector de pantalla.
 
 ## Configuración inicial
 
