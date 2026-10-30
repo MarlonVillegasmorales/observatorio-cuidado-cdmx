@@ -87,28 +87,28 @@ def aplicar_estilos() -> None:
             font-size: 0.82rem;
             font-weight: 500;
         }
-        [data-testid="stRadio"] > label { display: none; }
-        [data-testid="stRadio"] [role="radiogroup"] {
+        .st-key-nav-mobile { display: none; }
+        .st-key-menu-items {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 999px;
-            display: flex;
-            gap: 0.25rem;
-            padding: 0.3rem;
+            border-radius: 0.9rem;
+            margin: 0.35rem 0 0.75rem;
+            padding: 0.75rem;
         }
-        [data-testid="stRadio"] [role="radio"] {
-            border-radius: 999px;
-            min-height: 2.75rem;
-            padding: 0.55rem 1rem;
+        .action-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            min-height: 7rem;
+            padding: 1rem;
         }
-        [data-testid="stRadio"] [role="radio"]:has(input:checked) {
-            background: var(--brand-soft);
-            color: var(--brand-dark);
-            font-weight: 800;
+        .action-card h3 {
+            margin: 0 0 0.35rem;
         }
-        .task-description {
+        .action-card p {
             color: var(--muted) !important;
-            margin: 0.75rem 0 1.25rem;
+            font-size: 0.92rem !important;
+            margin: 0;
         }
         .section-kicker {
             color: var(--brand-dark);
@@ -197,12 +197,15 @@ def aplicar_estilos() -> None:
             min-height: 2.75rem;
             padding: 0.55rem 1.2rem;
         }
-        [data-testid="stButton"] button[kind="primary"] {
+        [data-testid="stButton"] button[kind="primary"],
+        [data-testid="stBaseButton-primary"] {
             background: var(--brand);
             border-color: var(--brand);
-            color: #FFFFFF;
+            color: #FFFFFF !important;
         }
-        [data-testid="stButton"] button[kind="primary"]:hover {
+        [data-testid="stBaseButton-primary"] * { color: #FFFFFF !important; }
+        [data-testid="stButton"] button[kind="primary"]:hover,
+        [data-testid="stBaseButton-primary"]:hover {
             background: var(--brand-dark);
             border-color: var(--brand-dark);
         }
@@ -232,12 +235,8 @@ def aplicar_estilos() -> None:
         }
         @media (max-width: 768px) {
             .block-container { padding: 1rem 0.8rem 2.5rem; }
-            [data-testid="stRadio"] [role="radiogroup"] {
-                border-radius: 1.25rem;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            [data-testid="stRadio"] [role="radio"] { flex: 1 1 40%; text-align: center; }
+            .st-key-nav-desktop { display: none; }
+            .st-key-nav-mobile { display: block; }
             [data-testid="stHorizontalBlock"] { flex-direction: column; gap: 0.65rem; }
             [data-testid="stButton"] button { width: 100%; }
             [data-testid="stDataFrame"] { max-width: 100%; overflow-x: auto; }

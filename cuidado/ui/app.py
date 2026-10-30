@@ -14,18 +14,26 @@ def evidencia():
     return cargar_evidencia()
 
 TAREAS = {
-    "Mapa por alcaldía": "Selecciona una alcaldía para consultar sus datos preparados.",
+    "Inicio": "Una entrada breve para elegir qué explorar.",
+    "Mapa": "Selecciona una alcaldía para consultar sus datos preparados.",
     "Comparar": "Ranking para identificar diferencias territoriales.",
     "Búsqueda demo": "Demostración sintética, sin plazas reales.",
     "Proyecto": "Fuentes, límites y estado académico.",
 }
 
 ICONOS_TAREAS = {
-    "Mapa por alcaldía": "⌂",
+    "Inicio": "⌂",
+    "Mapa": "⌖",
     "Comparar": "≋",
     "Búsqueda demo": "⌕",
     "Proyecto": "i",
-    "Información del proyecto": "Fuentes, límites y entregas pendientes.",
+}
+CLAVES_NAVEGACION = {
+    "Inicio": "inicio",
+    "Mapa": "mapa",
+    "Comparar": "comparar",
+    "Búsqueda demo": "busqueda",
+    "Proyecto": "proyecto",
 }
 
 def _navegar(paso):
@@ -138,18 +146,73 @@ def _render_busqueda():
             st.caption("Resultado demostrativo; requiere verificación institucional y no confirma una plaza.")
 
 
-def _render_navegacion(pagina: str) -> str:
-    opciones = [f"{ICONOS_TAREAS[tarea]}  {tarea}" for tarea in TAREAS]
-    seleccion = st.radio(
-        "Secciones del observatorio",
-        opciones,
-        index=list(TAREAS).index(pagina),
-        key="navegacion_principal",
-        horizontal=True,
-        label_visibility="collapsed",
-        format_func=lambda value: value,
+def _ir_a(seccion: str) -> None:
+    if seccion not in TAREAS:
+        raise ValueError(f"Sección de navegación desconocida: {seccion}")
+    st.session_state["seccion_activa"] = seccion
+
+
+def _render_inicio() -> None:
+    st.markdown('<div class="section-kicker">Observatorio del cuidado</div>', unsafe_allow_html=True)
+    st.header("Economía del cuidado en CDMX")
+    st.markdown(
+        "Consulta datos territoriales, compara alcaldías y recorre una búsqueda "
+        "demostrativa sin llenar formularios operativos."
     )
-    return opciones[[f"{ICONOS_TAREAS[tarea]}  {tarea}" for tarea in TAREAS].index(seleccion)].split("  ", 1)[1]
+    st.info("Demostración académica: las cifras y resultados sintéticos no confirman plazas ni efectos laborales.")
+    st.subheader("¿Qué quieres explorar?")
+    accesos = [
+        ("Explorar mapa", "Mapa", "mapa", "Consulta una alcaldía y sus datos demográficos."),
+        ("Comparar alcaldías", "Comparar", "comparar", "Ordena indicadores demográficos autorizados."),
+        ("Probar búsqueda", "Búsqueda demo", "busqueda", "Recorre un ejemplo de compatibilidad sintética."),
+    ]
+    columnas = st.columns(3)
+    for columna, (etiqueta, destino, clave, descripcion) in zip(columnas, accesos):
+        with columna:
+            st.markdown(f'<div class="action-card"><h3>{etiqueta}</h3><p>{descripcion}</p></div>', unsafe_allow_html=True)
+            if st.button(etiqueta, type="primary", key=f"inicio_{clave}"):
+                _ir_a(destino)
+                st.rerun()
+
+
+def _render_navegacion(pagina: str) -> None:
+    if pagina not in TAREAS:
+        pagina = "Inicio"
+        _ir_a(pagina)
+    opciones = list(TAREAS)
+    with st.container(key="nav-desktop"):
+        st.caption("Navegación principal")
+        columnas = st.columns(len(opciones))
+        for columna, opcion in zip(columnas, opciones):
+            with columna:
+                if st.button(
+                    f"{ICONOS_TAREAS[opcion]}  {opcion}",
+                    key=f"nav_{CLAVES_NAVEGACION[opcion]}",
+                    type="primary" if opcion == pagina else "secondary",
+                    use_container_width=True,
+                ):
+                    _ir_a(opcion)
+                    st.rerun()
+    with st.container(key="nav-mobile"):
+        st.caption(f"Sección actual: {pagina}")
+        if "menu_abierto" not in st.session_state:
+            st.session_state["menu_abierto"] = False
+        if st.button("Menú", key="menu_toggle", use_container_width=True):
+            st.session_state["menu_abierto"] = not st.session_state["menu_abierto"]
+            st.rerun()
+        if st.session_state["menu_abierto"]:
+            with st.container(key="menu-items"):
+                st.markdown("**Navegación principal**")
+                for opcion in opciones:
+                    if st.button(
+                        f"{ICONOS_TAREAS[opcion]}  {opcion}",
+                        key=f"menu_{CLAVES_NAVEGACION[opcion]}",
+                        type="primary" if opcion == pagina else "secondary",
+                        use_container_width=True,
+                    ):
+                        _ir_a(opcion)
+                        st.session_state["menu_abierto"] = False
+                        st.rerun()
 
 
 def _render_proyecto():
@@ -195,9 +258,13 @@ def main():
         '<div class="territory-label">CDMX <span>· demostración académica</span></div></div></header>',
         unsafe_allow_html=True,
     )
-    pagina = _render_navegacion("Mapa por alcaldía")
-    st.markdown(f'<p class="task-description">{TAREAS[pagina]}</p>', unsafe_allow_html=True)
-    if pagina == "Mapa por alcaldía":
+    if "seccion_activa" not in st.session_state:
+        st.session_state["seccion_activa"] = "Inicio"
+    pagina = st.session_state["seccion_activa"]
+    _render_navegacion(pagina)
+    if pagina == "Inicio":
+        _render_inicio()
+    elif pagina == "Mapa":
         mostrar_mapa_alcaldias()
     elif pagina == "Comparar":
         mostrar_comparativo_alcaldias()

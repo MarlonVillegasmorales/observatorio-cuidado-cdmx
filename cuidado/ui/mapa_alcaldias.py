@@ -158,13 +158,6 @@ def _grafico_edades(indicadores: pd.DataFrame, clave: str) -> None:
         },
         use_container_width=True,
     )
-    tabla = edades.rename(columns={"grupo": "Grupo de edad", "valor": "Personas"})[
-        ["Grupo de edad", "Personas"]
-    ]
-    tabla["Personas"] = tabla["Personas"].map(lambda valor: f"{valor:,.0f}")
-    st.dataframe(tabla, hide_index=True, use_container_width=True)
-
-
 def mostrar_mapa_alcaldias() -> None:
     """Renderiza el mapa, selector y panel de una única alcaldía seleccionada."""
 
@@ -175,13 +168,8 @@ def mostrar_mapa_alcaldias() -> None:
         return
 
     st.markdown('<div class="section-kicker">Explorador territorial</div>', unsafe_allow_html=True)
-    st.header("Mapa por alcaldía")
-    st.markdown(
-        '<div class="section-card">Selecciona una alcaldía para consultar sus datos. '
-        "Los polígonos corresponden al recurso oficial de límites de alcaldías "
-        "del Portal de Datos Abiertos de CDMX.</div>",
-        unsafe_allow_html=True,
-    )
+    st.header("Explora tu alcaldía")
+    st.write("Selecciona una alcaldía para consultar sus datos.")
     st.warning(
         "La población corresponde al Censo 2020 de INEGI (ITER), agregada por alcaldía. "
         "Los grupos etarios describen población registrada y no equivalen a necesidad de cuidado."
@@ -201,10 +189,7 @@ def mostrar_mapa_alcaldias() -> None:
         st.session_state["mapa_alcaldia_pending"] = ""
         st.rerun()
 
-    st.caption(
-        "El mapa inicia con las 16 alcaldías en lavanda uniforme. Puedes seleccionar "
-        "mediante la lista o haciendo clic en un polígono."
-    )
+    st.caption("El mapa muestra las 16 alcaldías. Puedes seleccionar mediante la lista o haciendo clic en un polígono.")
     mapa = _crear_mapa(geometria, seleccion or None)
     evento = st_folium(
         mapa,
@@ -224,54 +209,57 @@ def mostrar_mapa_alcaldias() -> None:
         return
 
     nombre = nombre_alcaldia(seleccion)
-    st.markdown(f'<div class="section-card"><h2>Datos de {nombre}</h2>'
-                '<p class="territorial-status">Fuente: INEGI, Censo 2020 (ITER). '
-                'Cartografía: Portal de Datos Abiertos de CDMX.</p></div>',
-                unsafe_allow_html=True)
-    st.subheader("Indicadores disponibles")
+    st.subheader(f"Datos de {nombre}")
+    st.caption(
+        "Fuente breve: INEGI, Censo 2020 (ITER). Cartografía: Portal de Datos "
+        "Abiertos de CDMX. Periodo: 2020."
+    )
     tarjetas = [
         ("Población total", fila_indicador(indicadores, seleccion, "poblacion_total"), ""),
         ("Población de 0 a 4 años", fila_indicador(indicadores, seleccion, "pob_0_4"), "Intervalo exacto disponible."),
         ("Personas de 60 años o más", _fila_60_mas(indicadores, seleccion), "Suma técnica de grupos etarios; no equivale a necesidad de cuidado."),
     ]
-    columnas = st.columns(4)
+    columnas = st.columns(3)
     for columna, (titulo, fila, nota) in zip(columnas, tarjetas):
         with columna:
             _tarjeta_indicador(titulo, fila, nota)
 
     st.subheader("Población por grupos de edad")
-    st.caption("Los grupos son mutuamente excluyentes según la fuente. Edad no especificada se conserva sin redistribuir.")
+    st.caption(
+        "Los grupos son mutuamente excluyentes según la fuente. Edad no "
+        "especificada se conserva sin redistribuir. Fuente: INEGI, Censo 2020."
+    )
     indicadores_autorizados = indicadores_publicos(indicadores, catalogo)
     _grafico_edades(indicadores_autorizados, seleccion)
-    st.markdown(
-        '<div class="section-card"><strong>Interpretación:</strong> estos conteos '
-        "describen la población registrada y no prueban necesidad de cuidado, demanda efectiva, "
-        "abandono laboral ni impacto social. La suma de 0–14 y 60+ no debe leerse como una "
-        "población única sin solapamientos.</div>",
-        unsafe_allow_html=True,
-    )
-    st.subheader("Fuentes y límites")
-    for fuente in fuentes:
-        st.caption(
-            f"{fuente['titulo']} · {fuente['institucion']} · "
-            f"Periodo: {fuente['periodo_dato']}. URL no documentada en el repositorio."
+    with st.expander("Ver todos los datos", expanded=False):
+        st.dataframe(
+            indicadores_de_alcaldia(indicadores_autorizados, seleccion)[
+                ["id_indicador", "valor", "unidad", "periodo", "tipo", "estado_disponibilidad"]
+            ].rename(
+                columns={
+                    "id_indicador": "Indicador",
+                    "valor": "Valor",
+                    "unidad": "Unidad",
+                    "periodo": "Periodo",
+                    "tipo": "Tipo",
+                    "estado_disponibilidad": "Estado",
+                }
+            ),
+            hide_index=True,
+            use_container_width=True,
         )
-    st.dataframe(
-        indicadores_de_alcaldia(indicadores_autorizados, seleccion)[
-            ["id_indicador", "valor", "unidad", "periodo", "tipo", "estado_disponibilidad"]
-        ].rename(
-            columns={
-                "id_indicador": "Indicador",
-                "valor": "Valor",
-                "unidad": "Unidad",
-                "periodo": "Periodo",
-                "tipo": "Tipo",
-                "estado_disponibilidad": "Estado",
-            }
-        ),
-        hide_index=True,
-        use_container_width=True,
-    )
+    with st.expander("Fuentes y cómo interpretar estos datos", expanded=False):
+        for fuente in fuentes:
+            st.caption(
+                f"{fuente['titulo']} · {fuente['institucion']} · "
+                f"Periodo: {fuente['periodo_dato']}. URL no documentada en el repositorio."
+            )
+        st.markdown(
+            "Los conteos describen la población registrada y no prueban necesidad "
+            "de cuidado, demanda efectiva, abandono laboral ni impacto social. La "
+            "suma de 0–14 y 60+ no debe leerse como una población única sin "
+            "solapamientos."
+        )
 
 
 def mostrar_comparativo_alcaldias() -> None:
