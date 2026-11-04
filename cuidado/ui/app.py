@@ -2,15 +2,14 @@
 from datetime import time
 import pandas as pd
 import streamlit as st
-from cuidado.services.evidencia import cargar_evidencia
 from cuidado.services.simulacion import ejecutar_busqueda
 from cuidado.services.integraciones import INTEGRACIONES
 from cuidado.ui.estilos import aplicar_estilos
-from cuidado.ui.territorial import mostrar_visor_territorial, mostrar_comparativo_cuidado, _metricas_principales
-from cuidado.ui.mapa_alcaldias import mostrar_comparativo_alcaldias, mostrar_mapa_alcaldias
 
 @st.cache_data(show_spinner='Cargando datos preparados...')
 def evidencia():
+    from cuidado.services.evidencia import cargar_evidencia
+
     return cargar_evidencia()
 
 TAREAS = {
@@ -265,8 +264,12 @@ def main():
     if pagina == "Inicio":
         _render_inicio()
     elif pagina == "Mapa":
+        from cuidado.ui.mapa_alcaldias import mostrar_mapa_alcaldias
+
         mostrar_mapa_alcaldias()
     elif pagina == "Comparar":
+        from cuidado.ui.mapa_alcaldias import mostrar_comparativo_alcaldias
+
         mostrar_comparativo_alcaldias()
     elif pagina=="Búsqueda demo":
         _render_busqueda()

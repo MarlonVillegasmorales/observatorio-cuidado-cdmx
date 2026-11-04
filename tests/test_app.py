@@ -34,3 +34,14 @@ def test_search_keeps_form_values_and_marks_stale_results():
     app.button(key='buscar_actualizar').click().run()
     assert not app.exception
     assert any('No hay un servicio sintético' in text.value for text in app.markdown)
+
+
+def test_comparison_has_distinct_selections_and_composition():
+    app = AppTest.from_file(str(ROOT / "app_dashboard.py"), default_timeout=90).run()
+    app.session_state["seccion_activa"] = "Comparar"
+    app.run()
+    assert not app.exception
+    assert any("Compara dos alcaldías" in element.value for element in app.header)
+    assert app.session_state["comparativo_alcaldia_a"] != app.session_state["comparativo_alcaldia_b"]
+    assert any("Personas de 0 a 4 años" in element.value for element in app.subheader)
+    assert any("Personas de 60 años o más" in element.value for element in app.subheader)

@@ -10,8 +10,10 @@ import streamlit as st
 from streamlit_folium import st_folium
 
 from cuidado.services.mapa_alcaldias import (
+    cargar_indicadores_alcaldias,
     cargar_mapa_alcaldias,
     claves_alcaldias,
+    comparacion_composicion,
     fila_indicador,
     indicadores_de_alcaldia,
     indicadores_publicos,
@@ -158,6 +160,16 @@ def _grafico_edades(indicadores: pd.DataFrame, clave: str) -> None:
         },
         use_container_width=True,
     )
+
+
+def _guardar_comparacion_a() -> None:
+    st.session_state["comparativo_seleccion_a"] = st.session_state["comparativo_alcaldia_a"]
+
+
+def _guardar_comparacion_b() -> None:
+    st.session_state["comparativo_seleccion_b"] = st.session_state["comparativo_alcaldia_b"]
+
+
 def mostrar_mapa_alcaldias() -> None:
     """Renderiza el mapa, selector y panel de una única alcaldía seleccionada."""
 
@@ -186,23 +198,42 @@ def mostrar_mapa_alcaldias() -> None:
         format_func=lambda clave: "Selecciona una alcaldía" if not clave else nombre_alcaldia(clave),
     )
     if st.button("Ver toda CDMX", key="mapa_alcaldia_reset"):
+        st.session_state["mapa_alcaldia_ignored_click"] = seleccion
         st.session_state["mapa_alcaldia_pending"] = ""
         st.rerun()
 
     st.caption("El mapa muestra las 16 alcaldías. Puedes seleccionar mediante la lista o haciendo clic en un polígono.")
-    mapa = _crear_mapa(geometria, seleccion or None)
-    evento = st_folium(
-        mapa,
-        key=f"mapa-alcaldias-{seleccion or 'todas'}",
-        height=420,
-        use_container_width=True,
-        returned_objects=["last_active_drawing"],
+    consultar_sin_mapa = st.checkbox(
+        "Consultar sin mapa",
+        key="mapa_alcaldia_sin_mapa",
+        help="Muestra el selector y los datos sin inicializar el componente del mapa.",
     )
-    dibujo = evento.get("last_active_drawing") if evento else None
-    clave_clic = (dibujo or {}).get("properties", {}).get("clave")
-    if clave_clic in claves and clave_clic != seleccion:
-        st.session_state["mapa_alcaldia_pending"] = clave_clic
-        st.rerun()
+    if consultar_sin_mapa:
+        st.info("Consulta sin mapa activa. Usa esta opción si el componente interactivo no termina de cargar.")
+    else:
+        try:
+            mapa = _crear_mapa(geometria, seleccion or None)
+            evento = st_folium(
+                mapa,
+                key="mapa-alcaldias",
+                height=420,
+                use_container_width=True,
+                returned_objects=["last_active_drawing"],
+            )
+        except (RuntimeError, ValueError, TypeError) as error:
+            st.error(f"No se pudo inicializar el mapa interactivo: {error}")
+            st.info("La consulta continúa disponible: activa «Consultar sin mapa».")
+            evento = None
+        dibujo = evento.get("last_active_drawing") if evento else None
+        clave_clic = (dibujo or {}).get("properties", {}).get("clave")
+        ignorada = st.session_state.pop("mapa_alcaldia_ignored_click", None)
+        ultimo_clic = st.session_state.get("mapa_alcaldia_last_click")
+        if clave_clic == ignorada:
+            clave_clic = None
+        if clave_clic in claves and clave_clic != seleccion and clave_clic != ultimo_clic:
+            st.session_state["mapa_alcaldia_last_click"] = clave_clic
+            st.session_state["mapa_alcaldia_pending"] = clave_clic
+            st.rerun()
 
     if not seleccion:
         st.info("Selecciona una alcaldía para consultar sus datos.")
@@ -263,32 +294,165 @@ def mostrar_mapa_alcaldias() -> None:
 
 
 def mostrar_comparativo_alcaldias() -> None:
-    """Compara únicamente indicadores demográficos autorizados."""
+    """Compara composición demográfica sin construir el mapa."""
 
     try:
-        _, indicadores, catalogo, _ = cargar_mapa_alcaldias("v3")
+        indicadores, catalogo = cargar_indicadores_alcaldias("v3")
     except (FileNotFoundError, ValueError) as error:
         st.error(f"No se puede cargar el comparativo territorial: {error}")
         return
     autorizados = indicadores_publicos(indicadores, catalogo)
-    opciones = ["poblacion_total", "pob_0_4"]
-    nombres = {"poblacion_total": "Población total", "pob_0_4": "Población de 0 a 4 años"}
-    indicador = st.selectbox(
-        "Indicador demográfico autorizado",
-        opciones,
-        format_func=nombres.get,
-        key="comparativo_mapa_indicador",
+    claves = sorted(autorizados["clave_alcaldia"].astype("string").unique())
+    nombres = {clave: nombre_alcaldia(clave) for clave in claves}
+    if len(claves) < 2:
+        st.error("No hay dos alcaldías con datos comparables.")
+        return
+
+    st.markdown('<div class="section-kicker">Comparación territorial</div>', unsafe_allow_html=True)
+    st.header("Compara dos alcaldías")
+    st.write(
+        "Explora cómo cambian la composición de la población entre dos zonas."
     )
-    tabla = autorizados.loc[autorizados["id_indicador"].eq(indicador),
-                            ["clave_alcaldia", "alcaldia", "valor", "unidad", "periodo"]]
-    tabla = tabla.sort_values("valor", ascending=False).reset_index(drop=True)
-    tabla.insert(0, "Posición", range(1, len(tabla) + 1))
-    tabla = tabla.rename(columns={"clave_alcaldia": "Clave", "alcaldia": "Alcaldía",
-                                  "valor": "Valor", "unidad": "Unidad",
-                                  "periodo": "Periodo"})
-    st.markdown(
-        '<div class="section-card">El orden corresponde al indicador seleccionado; '
-        "no representa una evaluación general de la alcaldía.</div>",
-        unsafe_allow_html=True,
+    mapa_seleccion = st.session_state.get("mapa_alcaldia_selector", "")
+    if "comparativo_seleccion_a" not in st.session_state:
+        st.session_state["comparativo_seleccion_a"] = (
+            mapa_seleccion if mapa_seleccion in claves else claves[0]
+        )
+    if "comparativo_seleccion_b" not in st.session_state:
+        st.session_state["comparativo_seleccion_b"] = next(
+            clave for clave in claves if clave != st.session_state["comparativo_seleccion_a"]
+        )
+    if "comparativo_alcaldia_a" not in st.session_state:
+        st.session_state["comparativo_alcaldia_a"] = st.session_state["comparativo_seleccion_a"]
+    opciones_a = claves
+    alcaldia_a = st.selectbox(
+        "Alcaldía A",
+        opciones_a,
+        key="comparativo_alcaldia_a",
+        on_change=_guardar_comparacion_a,
+        format_func=lambda clave: nombres[clave],
     )
-    st.dataframe(tabla, hide_index=True, use_container_width=True)
+    opciones_b = [clave for clave in claves if clave != alcaldia_a]
+    st.session_state["comparativo_seleccion_a"] = alcaldia_a
+    if st.session_state.get("comparativo_seleccion_b") not in opciones_b:
+        st.session_state["comparativo_seleccion_b"] = opciones_b[0]
+    if "comparativo_alcaldia_b" not in st.session_state:
+        st.session_state["comparativo_alcaldia_b"] = st.session_state["comparativo_seleccion_b"]
+    alcaldia_b = st.selectbox(
+        "Alcaldía B",
+        opciones_b,
+        key="comparativo_alcaldia_b",
+        on_change=_guardar_comparacion_b,
+        format_func=lambda clave: nombres[clave],
+    )
+    st.session_state["comparativo_seleccion_b"] = alcaldia_b
+
+    comparacion = comparacion_composicion(autorizados, alcaldia_a, alcaldia_b)
+    if comparacion.empty or comparacion["a"].isna().all():
+        st.warning("No hay indicadores con denominador y valores completos para este par.")
+        return
+
+    st.caption(
+        "Fuente: INEGI, Censo 2020, ITER por localidad. "
+        "Las proporciones usan población total de la misma alcaldía."
+    )
+    for _, row in comparacion.loc[comparacion["a"].notna()].iterrows():
+        st.subheader(str(row["nombre"]))
+        chart_data = pd.DataFrame(
+            {
+                "Alcaldía": [
+                    nombres[alcaldia_a],
+                    nombres[alcaldia_b],
+                    "Referencia CDMX",
+                ],
+                "Proporción (%)": [row["a"], row["b"], row["cdmx"]],
+            }
+        )
+        st.vega_lite_chart(
+            chart_data,
+            {
+                "mark": {"type": "bar", "cornerRadiusEnd": 4},
+                "encoding": {
+                    "y": {
+                        "field": "Alcaldía",
+                        "type": "nominal",
+                        "sort": None,
+                        "title": None,
+                    },
+                    "x": {
+                        "field": "Proporción (%)",
+                        "type": "quantitative",
+                        "scale": {"domain": [0, 100]},
+                        "title": "Personas por cada 100 habitantes",
+                    },
+                    "color": {
+                        "field": "Alcaldía",
+                        "type": "nominal",
+                        "scale": {
+                            "domain": [
+                                nombres[alcaldia_a],
+                                nombres[alcaldia_b],
+                                "Referencia CDMX",
+                            ],
+                            "range": ["#6D28D9", "#A78BFA", "#64748B"],
+                        },
+                        "legend": None,
+                    },
+                    "tooltip": [
+                        {"field": "Alcaldía", "type": "nominal"},
+                        {
+                            "field": "Proporción (%)",
+                            "type": "quantitative",
+                            "format": ".1f",
+                        },
+                    ],
+                },
+                "height": 180,
+            },
+            use_container_width=True,
+        )
+        st.dataframe(
+            pd.DataFrame(
+                {
+                    "Zona": [
+                        nombres[alcaldia_a],
+                        nombres[alcaldia_b],
+                        "Referencia CDMX",
+                    ],
+                    "Personas por cada 100 habitantes": [
+                        f"{row['a']:.1f}",
+                        f"{row['b']:.1f}",
+                        f"{row['cdmx']:.1f}",
+                    ],
+                }
+            ),
+            hide_index=True,
+            use_container_width=True,
+        )
+        diferencia = abs(float(row["diferencia_pp"]))
+        if round(float(row["a"]), 1) == round(float(row["b"]), 1):
+            st.info(
+                f"En ambas alcaldías se observan aproximadamente "
+                f"{float(row['a']):.1f} personas por cada 100 habitantes."
+            )
+        else:
+            mayor = nombres[alcaldia_a] if row["diferencia_pp"] > 0 else nombres[alcaldia_b]
+            st.info(
+                f"En {mayor} la proporción es mayor por {diferencia:.1f} "
+                "puntos porcentuales (diferencia entre dos porcentajes)."
+            )
+
+    with st.expander("Fuente, metodología y limitaciones"):
+        st.write(
+            "Fuente: INEGI, Censo de Población y Vivienda 2020, ITER por localidad. "
+            "Cada proporción divide el numerador etario entre la población total "
+            "de la misma alcaldía. La referencia CDMX divide la suma de numeradores "
+            "entre la suma de denominadores de las 16 alcaldías; no es un promedio "
+            "simple de porcentajes."
+        )
+        st.write(
+            "Las diferencias describen composición registrada y no indican necesidad "
+            "de cuidado, calidad de servicios ni impacto social. No se muestran "
+            "servicios ni acceso territorial porque el directorio disponible no "
+            "cumple una cobertura y definición comparables verificadas."
+        )

@@ -1,6 +1,6 @@
 {
   "version": "mapa-alcaldias-v2",
-  "fecha_generacion": "2026-10-29",
+  "fecha_generacion": "2026-11-03",
   "alcaldias": 16,
   "claves_unicas": true,
   "claves_esperadas": [
@@ -49,7 +49,7 @@
   },
   "conciliacion_totales_oficiales": {
     "estado": "verificada",
-    "motivo": "Los valores proceden del ITER 2020 oficial de INEGI."
+    "motivo": "Se excluyó LOC=0, que es el total municipal repetido por el ITER; se agregaron sólo localidades de cada alcaldía."
   },
   "discrepancias": [
     "El conteo histórico de equipamiento se excluyó por procedencia y definición no verificadas.",

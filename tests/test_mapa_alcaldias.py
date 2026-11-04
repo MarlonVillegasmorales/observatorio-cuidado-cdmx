@@ -14,6 +14,7 @@ from cuidado.pipelines.mapa_alcaldias import (
 )
 from cuidado.services.mapa_alcaldias import (
     cargar_mapa_alcaldias,
+    comparacion_composicion,
     indicadores_de_alcaldia,
     indicadores_publicos,
 )
@@ -99,8 +100,36 @@ def test_poblacion_oficial_y_exclusiones_publicas() -> None:
         & publicos["id_indicador"].isin(["poblacion_total", "pob_0_4"])
     ].set_index("id_indicador")["valor"]
     assert iztapalapa.to_dict() == {
-        "poblacion_total": 3670972.0,
-        "pob_0_4": 206296.0,
+        "poblacion_total": 1835486.0,
+        "pob_0_4": 103148.0,
     }
     assert "guarderias_conteo" not in set(publicos["id_indicador"])
     assert "estimacion_cuidadores_sin_trabajo_mercado" not in set(publicos["id_indicador"])
+
+
+def test_comparacion_usa_referencia_ponderada_y_puntos_porcentuales() -> None:
+    _, indicadores, _, _ = cargar_mapa_alcaldias.__wrapped__()
+    resultado = comparacion_composicion(indicadores, "09 007", "09 005")
+    menores = resultado.loc[resultado["indicador"].eq("pob_0_4")].iloc[0]
+    numeradores = indicadores.loc[
+        indicadores["id_indicador"].eq("pob_0_4"), "valor"
+    ].sum()
+    denominadores = indicadores.loc[
+        indicadores["id_indicador"].eq("poblacion_total"), "valor"
+    ].sum()
+    assert menores["cdmx"] == pytest.approx(numeradores / denominadores * 100)
+    assert menores["diferencia_pp"] == pytest.approx(menores["a"] - menores["b"])
+
+
+def test_comparacion_no_convierte_faltantes_ni_denominador_cero_en_cero() -> None:
+    datos = pd.DataFrame(
+        [
+            {"clave_alcaldia": "A", "id_indicador": "pob_0_4", "valor": 10},
+            {"clave_alcaldia": "A", "id_indicador": "poblacion_total", "valor": 0},
+            {"clave_alcaldia": "B", "id_indicador": "pob_0_4", "valor": pd.NA},
+            {"clave_alcaldia": "B", "id_indicador": "poblacion_total", "valor": 100},
+        ]
+    )
+    resultado = comparacion_composicion(datos, "A", "B")
+    assert resultado["a"].isna().all()
+    assert resultado["b"].isna().all()
