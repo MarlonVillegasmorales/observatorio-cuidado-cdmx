@@ -76,6 +76,8 @@ def _read_censo(path: Path) -> pd.DataFrame:
                 )
         raw.columns = [str(column).lstrip("\ufeff") for column in raw.columns]
         raw = raw.loc[raw["ENTIDAD"].astype("string").str.zfill(2).eq("09")].copy()
+        # LOC=0 is the municipal total and repeats the sum of its localities.
+        raw = raw.loc[raw["LOC"].astype("string").str.strip().ne("0")].copy()
         raw["clave"] = "09 " + raw["MUN"].astype("string").str.replace(".0", "", regex=False).str.zfill(3)
         raw = raw.loc[raw["clave"].isin(EXPECTED_KEYS)].copy()
         columns = ["POBTOT"] + [source for _, _, source in AGE_GROUPS]
@@ -268,7 +270,8 @@ def preparar_mapa_alcaldias(*, output_dir: Path = DEFAULT_OUTPUT,
                                    "filas_conciliadas": int((difference == 0).sum()),
                                    "filas": len(difference)},
         "conciliacion_totales_oficiales": {"estado": "verificada",
-            "motivo": "Los valores proceden del ITER 2020 oficial de INEGI."},
+            "motivo": "Se excluyó LOC=0, que es el total municipal repetido por el ITER; "
+                      "se agregaron sólo localidades de cada alcaldía."},
         "discrepancias": ["El conteo histórico de equipamiento se excluyó por procedencia y definición no verificadas.",
                           "Edad no especificada es un residual documentado y no se redistribuye."],
         "indicadores_excluidos": ["cobertura_caci_0_2_pct", "poblacion_total_infantes_0_2",

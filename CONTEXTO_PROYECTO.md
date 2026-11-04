@@ -68,7 +68,7 @@ este proyecto.
 | Función | Código y acceso | Estado comprobable |
 |---|---|---|
 | Mapa por alcaldía | `cuidado/ui/app.py`, `cuidado/ui/mapa_alcaldias.py` | Implementado localmente con límites oficiales y población INEGI 2020; no es evaluación de impacto. |
-| Comparar zonas | `cuidado/ui/app.py` y `mostrar_comparativo_alcaldias` | Implementado con población total y 0–4 verificados; no es evaluación de impacto. |
+| Comparar zonas | `cuidado/ui/app.py` y `mostrar_comparativo_alcaldias` | Implementado con composición 0–4 y 60+ por cada 100 habitantes, referencia ponderada de CDMX y diferencias descriptivas; no es evaluación de impacto. |
 | Probar una búsqueda | `_render_busqueda` en `cuidado/ui/app.py` | Implementada como demo sintética de cuatro pasos; conserva valores y marca resultados pendientes al cambiar filtros. |
 | Información del proyecto | `cuidado/ui/app.py` e `INTEGRACIONES` | Visible; muestra entregas pendientes, no las convierte en módulos recibidos. |
 | ETL y datos preparados | `cuidado/pipelines/`, `data/processed/mapa_alcaldias/` | Código y artefactos reproducibles con fuentes oficiales de cartografía e INEGI 2020; infraestructura histórica excluida. |
