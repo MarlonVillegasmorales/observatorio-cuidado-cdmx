@@ -626,9 +626,9 @@ class _SearchResult extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(searched ? 'Centro demo compatible' : 'Completa los filtros', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: _ink)),
+        Text(searched ? 'Ejemplo sintético predefinido' : 'Completa los filtros', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: _ink)),
         const SizedBox(height: 8),
-        Text(searched ? 'Recomendación sintética · $type' : 'Ejecuta la búsqueda para ver resultados.', style: const TextStyle(color: _muted)),
+        Text(searched ? 'Ejemplo fijo de interfaz · $type · no consulta disponibilidad' : 'Ejecuta la búsqueda para ver el ejemplo fijo.', style: const TextStyle(color: _muted)),
         if (searched) const Padding(padding: EdgeInsets.only(top: 8), child: Text('Resultado demostrativo; requiere verificación institucional y no confirma una plaza.', style: TextStyle(color: _muted, fontSize: 13))),
       ]));
 }

@@ -66,7 +66,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ver resultados'));
     await tester.pumpAndSettle();
-    expect(find.text('Centro demo compatible'), findsOneWidget);
+    expect(find.text('Ejemplo sintético predefinido'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Restablecer'));
     await tester.tap(find.text('Restablecer'));

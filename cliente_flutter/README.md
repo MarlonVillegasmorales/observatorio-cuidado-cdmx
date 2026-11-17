@@ -28,7 +28,8 @@ valida 16 alcaldías únicas y genera
 - Inicio: navegación y presentación del proyecto.
 - Mapa: datos territoriales observados del Censo 2020.
 - Comparar: proporciones observadas 0–14 y 60+ derivadas del Censo 2020.
-- Búsqueda: demostración sintética; no realiza matching ni crea reservas.
+- Búsqueda: recorrido de interfaz con resultado fijo predefinido; no realiza
+  matching, consulta disponibilidad ni crea reservas.
 - Proyecto: límites y procedencia.
 - Simuladores: no están implementados en Flutter; no deben presentarse como
   conectados hasta contar con una API Python validada.

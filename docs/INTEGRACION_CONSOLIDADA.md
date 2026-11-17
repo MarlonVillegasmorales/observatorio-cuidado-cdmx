@@ -102,8 +102,9 @@ suma silenciosamente grupos incompletos.
 
 La comparación usa proporciones observadas derivadas del Censo 2020 para 0–14
 y 60 años o más. La búsqueda conserva filtros, permite retroceder y
-restablecer, y muestra explícitamente que su resultado es sintético. No existe
-una pantalla de simuladores en Flutter ni una API de Python. Un contrato futuro
+restablecer, y muestra explícitamente que su resultado es un ejemplo fijo
+predefinido, sin consultar disponibilidad ni ejecutar el matching Python.
+No existe una pantalla de simuladores en Flutter ni una API de Python. Un contrato futuro
 para matching y simuladores debe aceptar entradas validadas y devolver errores;
 no debe duplicar fórmulas Dart ni usar Streamlit como API.
 
@@ -133,3 +134,29 @@ firebase deploy --only hosting
 El último comando requiere iniciar sesión y seleccionar previamente un proyecto
 Firebase existente; no se ejecutará desde esta integración. Streamlit conserva
 su alojamiento independiente y no se utiliza como servidor de archivos ni API.
+
+## Cierre de validación local
+
+Automatizado:
+- Suite Python aprobada.
+- `flutter analyze`, `flutter test` y `flutter build web` aprobados.
+- JSON territorial generado desde el parquet preparado y probado contra 16
+  claves únicas.
+
+Recorrido navegador comprobado:
+- Streamlit respondió en http://localhost:8501 y mostró Inicio, navegación y
+  datos territoriales en el recorrido disponible.
+- Flutter Web respondió en http://localhost:8080 y quedó renderizada su pantalla
+  Inicio después de completar la carga inicial del motor web.
+
+Comprobación manual pendiente en navegador:
+- Clic normal por las cinco secciones de Flutter y recorrido de selección.
+- Comparación con dos alcaldías.
+- Restablecimiento de búsqueda y conservación entre secciones.
+- Verificación física móvil y escritorio; las pruebas actuales usan tamaños
+  emulados de 360, 390, 768 y 1440 px.
+- Foco por teclado, 200 % de ampliación y estados de carga/error completos.
+
+La búsqueda Flutter es una demostración de interfaz con un ejemplo fijo
+predefinido. No consulta disponibilidad, no ejecuta matching Python y no debe
+presentarse como compatibilidad calculada.
