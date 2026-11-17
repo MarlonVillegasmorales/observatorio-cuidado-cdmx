@@ -1,7 +1,7 @@
 {
   "hosting": [
     {
-      "target": "observatorio",
+      "site": "proyecto-cuidado-21dcb",
     "public": "cliente_flutter/build/web",
     "ignore": [
       "firebase.json",
