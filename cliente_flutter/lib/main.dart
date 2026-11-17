@@ -18,6 +18,7 @@ class AlcaldiaData {
     required this.total,
     required this.children,
     required this.olderAdults,
+    required this.children14,
     required this.source,
     required this.dataType,
   });
@@ -29,6 +30,7 @@ class AlcaldiaData {
   final int olderAdults;
   final String source;
   final String dataType;
+  final int children14;
 
   factory AlcaldiaData.fromJson(Map<String, dynamic> json) => AlcaldiaData(
         name: json['alcaldia'] as String,
@@ -36,6 +38,7 @@ class AlcaldiaData {
         total: json['poblacion_total'] as int,
         children: json['poblacion_0_4'] as int,
         olderAdults: json['poblacion_60_mas'] as int,
+        children14: json['poblacion_0_14'] as int,
         source: json['fuente'] as String,
         dataType: json['tipo_dato'] as String,
       );
@@ -105,11 +108,11 @@ class _ObservatoryShellState extends State<ObservatoryShell> {
   int _selectedIndex = 0;
 
   static const _destinations = [
-    NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Inicio'),
-    NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Mapa'),
-    NavigationDestination(icon: Icon(Icons.compare_arrows), label: 'Comparar'),
-    NavigationDestination(icon: Icon(Icons.search), label: 'Búsqueda'),
-    NavigationDestination(icon: Icon(Icons.info_outline), selectedIcon: Icon(Icons.info), label: 'Proyecto'),
+    NavigationDestination(key: Key('nav_inicio'), icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Inicio'),
+    NavigationDestination(key: Key('nav_mapa'), icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Mapa'),
+    NavigationDestination(key: Key('nav_comparar'), icon: Icon(Icons.compare_arrows), label: 'Comparar'),
+    NavigationDestination(key: Key('nav_busqueda'), icon: Icon(Icons.search), label: 'Búsqueda'),
+    NavigationDestination(key: Key('nav_proyecto'), icon: Icon(Icons.info_outline), selectedIcon: Icon(Icons.info), label: 'Proyecto'),
   ];
 
   static const _railDestinations = [
@@ -127,7 +130,7 @@ class _ObservatoryShellState extends State<ObservatoryShell> {
       index: _selectedIndex,
       children: [
         const HomeScreen(),
-        MapScreen(active: _selectedIndex == 1),
+        const MapScreen(),
         const CompareScreen(),
         const SearchScreen(),
         const ProjectScreen(),
@@ -305,9 +308,8 @@ class _ActionCard extends StatelessWidget {
 const _alcaldias = ['Álvaro Obregón', 'Azcapotzalco', 'Benito Juárez', 'Coyoacán', 'Cuajimalpa', 'Cuauhtémoc', 'Gustavo A. Madero', 'Iztacalco', 'Iztapalapa', 'La Magdalena Contreras', 'Miguel Hidalgo', 'Milpa Alta', 'Tláhuac', 'Tlalpan', 'Venustiano Carranza', 'Xochimilco'];
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key, required this.active});
-
-  final bool active;
+  const MapScreen({super.key, this.dataFuture});
+  final Future<List<AlcaldiaData>>? dataFuture;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -315,32 +317,16 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   String? _selected;
-  Future<List<AlcaldiaData>>? _dataFuture;
+  late final Future<List<AlcaldiaData>> _dataFuture;
 
   @override
   void initState() {
     super.initState();
-    if (widget.active) {
-      _dataFuture = _loadAlcaldias();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant MapScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.active && !oldWidget.active) {
-      final future = _loadAlcaldias();
-      setState(() {
-        _dataFuture = future;
-      });
-    }
+    _dataFuture = widget.dataFuture ?? _loadAlcaldias();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.active) {
-      return const SizedBox.shrink();
-    }
     return FutureBuilder<List<AlcaldiaData>>(
         future: _dataFuture,
         builder: (context, snapshot) {
@@ -355,11 +341,7 @@ class _MapScreenState extends State<MapScreen> {
             );
           }
           if (!snapshot.hasData) {
-            return const _Page(
-              kicker: 'Explorador territorial',
-              title: 'Cargando datos territoriales',
-              child: Center(child: Text('Cargando datos preparados...')),
-            );
+            return _renderMap(context, const []);
           }
           return _renderMap(context, snapshot.data!);
         },
@@ -475,7 +457,8 @@ class _AgeBars extends StatelessWidget {
 }
 
 class CompareScreen extends StatefulWidget {
-  const CompareScreen({super.key});
+  const CompareScreen({super.key, this.dataFuture});
+  final Future<List<AlcaldiaData>>? dataFuture;
 
   @override
   State<CompareScreen> createState() => _CompareScreenState();
@@ -484,9 +467,43 @@ class CompareScreen extends StatefulWidget {
 class _CompareScreenState extends State<CompareScreen> {
   String _a = 'Iztapalapa';
   String _b = 'Benito Juárez';
+  late final Future<List<AlcaldiaData>> _dataFuture =
+      widget.dataFuture ?? _loadAlcaldias();
 
   @override
-  Widget build(BuildContext context) => _Page(
+  Widget build(BuildContext context) => FutureBuilder<List<AlcaldiaData>>(
+        future: _dataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const _Page(
+              kicker: 'Comparación territorial',
+              title: 'No se pudieron cargar los datos',
+              child: _Notice(child: 'La comparación requiere el archivo territorial preparado. No se calculan valores de sustitución.'),
+            );
+          }
+          if (!snapshot.hasData) {
+            return const _Page(
+              kicker: 'Comparación territorial',
+              title: 'Compara dos alcaldías',
+              child: Center(child: Text('Cargando datos preparados...')),
+            );
+          }
+          return _render(context, snapshot.data!);
+        },
+      );
+
+  double _ratio(List<AlcaldiaData> data, String name, String group) {
+    for (final item in data) {
+      if (item.name == name) {
+        if (item.total == 0) return 0;
+        final value = group == '60+' ? item.olderAdults : item.children14;
+        return value / item.total;
+      }
+    }
+    return 0;
+  }
+
+  Widget _render(BuildContext context, List<AlcaldiaData> data) => _Page(
         kicker: 'Comparación territorial',
         title: 'Compara dos alcaldías',
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -495,8 +512,8 @@ class _CompareScreenState extends State<CompareScreen> {
           LayoutBuilder(builder: (context, constraints) {
             final vertical = constraints.maxWidth < 560;
             final fields = [
-              DropdownButtonFormField<String>(initialValue: _a, decoration: const InputDecoration(labelText: 'Alcaldía A'), items: _alcaldias.map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (x) { if (x != null) setState(() => _a = x); }),
-              DropdownButtonFormField<String>(initialValue: _b, decoration: const InputDecoration(labelText: 'Alcaldía B'), items: _alcaldias.where((x) => x != _a).map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (x) { if (x != null) setState(() => _b = x); }),
+              DropdownButtonFormField<String>(initialValue: _a, isExpanded: true, isDense: true, decoration: const InputDecoration(labelText: 'Alcaldía A', isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)), items: _alcaldias.map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (x) { if (x != null) setState(() => _a = x); }),
+              DropdownButtonFormField<String>(initialValue: _b, isExpanded: true, isDense: true, decoration: const InputDecoration(labelText: 'Alcaldía B', isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)), items: _alcaldias.where((x) => x != _a).map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (x) { if (x != null) setState(() => _b = x); }),
             ];
             return vertical ? Column(children: [fields[0], const SizedBox(height: 12), fields[1]]) : Row(children: [Expanded(child: fields[0]), const SizedBox(width: 12), Expanded(child: fields[1])]);
           }),
@@ -504,10 +521,10 @@ class _CompareScreenState extends State<CompareScreen> {
           _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Composición demográfica', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: _ink)),
             const SizedBox(height: 4),
-            const Text('Personas por cada 100 habitantes · datos demo', style: TextStyle(color: _muted, fontSize: 13)),
+            const Text('Personas por cada 100 habitantes · Censo 2020 observado', style: TextStyle(color: _muted, fontSize: 13)),
             const SizedBox(height: 16),
-            _ComparisonRow(label: '0 a 14 años', first: _a, firstValue: .58, second: _b, secondValue: .42),
-            _ComparisonRow(label: '60 años o más', first: _a, firstValue: .35, second: _b, secondValue: .52),
+            _ComparisonRow(label: '0 a 14 años', first: _a, firstValue: _ratio(data, _a, '0-14'), second: _b, secondValue: _ratio(data, _b, '0-14')),
+            _ComparisonRow(label: '60 años o más', first: _a, firstValue: _ratio(data, _a, '60+'), second: _b, secondValue: _ratio(data, _b, '60+')),
           ])),
           const SizedBox(height: 12),
           const _Notice(child: 'Fuente: INEGI, Censo 2020, ITER. Las proporciones son descriptivas y no constituyen una evaluación de impacto.'),
@@ -579,8 +596,19 @@ class _SearchScreenState extends State<SearchScreen> {
           const SizedBox(height: 18),
           Wrap(spacing: 10, runSpacing: 10, children: [
             if (_step > 0) OutlinedButton(onPressed: () => setState(() => _step--), child: const Text('Atrás')),
+            if (_step > 0 || _searched) OutlinedButton(
+              onPressed: () => setState(() {
+                _step = 0;
+                _type = 'Cuidado infantil';
+                _searched = false;
+              }),
+              child: const Text('Restablecer'),
+            ),
             FilledButton(onPressed: () => setState(() {
-              if (_step < 3) {
+              if (_step == 2) {
+                _searched = true;
+                _step = 3;
+              } else if (_step < 3) {
                 _step++;
               } else {
                 _searched = true;

@@ -89,3 +89,47 @@ La publicación requiere revisar los resultados en Streamlit y Flutter Web,
 confirmar accesibilidad, incorporar fuentes originales con autorización y
 ejecutar las pruebas completas en el entorno de publicación. No se hizo push,
 despliegue ni integración a `main`.
+
+## Estado funcional y Firebase
+
+Flutter está dividido en pantallas verificables: Inicio, consulta territorial,
+comparación y búsqueda demostrativa. El mapa y comparación consumen
+`cliente_flutter/assets/data/alcaldias.json`, generado por
+`python scripts/generar_json_flutter.py` desde el parquet preparado del mapa.
+El generador valida las 16 claves oficiales, nombres con acentos, periodos,
+unidades, duplicados y valores faltantes; no reemplaza faltantes por cero ni
+suma silenciosamente grupos incompletos.
+
+La comparación usa proporciones observadas derivadas del Censo 2020 para 0–14
+y 60 años o más. La búsqueda conserva filtros, permite retroceder y
+restablecer, y muestra explícitamente que su resultado es sintético. No existe
+una pantalla de simuladores en Flutter ni una API de Python. Un contrato futuro
+para matching y simuladores debe aceptar entradas validadas y devolver errores;
+no debe duplicar fórmulas Dart ni usar Streamlit como API.
+
+El notebook vigente es `modulo_b2b_b2g.integracion.ipynb`. Importa la
+implementación canónica de `cuidado/services/simulador_b2b_b2g.py`, usa el CSV
+corregido de `data/processed/simulador_b2b_b2g_parametros.csv` y valida los 30
+escenarios desde una raíz portátil. `modulo_b2b_b2g.ipynb` permanece como
+histórico de procedencia y no es la versión vigente.
+
+Firebase Hosting tiene configuración local en `firebase.json`. Usa
+`cliente_flutter/build/web` como directorio público, reescribe rutas a
+`index.html`, evita caché persistente de `index.html` y excluye mapas de código
+fuente. No hay `.firebaserc` ni ID de proyecto configurado: seleccionar proyecto
+Firebase es un paso manual pendiente. No se ha ejecutado `firebase deploy`.
+
+Preparación reproducible:
+
+```powershell
+python scripts/generar_json_flutter.py
+cd cliente_flutter
+flutter pub get
+flutter build web
+firebase.json usa cliente_flutter/build/web como public
+firebase deploy --only hosting
+```
+
+El último comando requiere iniciar sesión y seleccionar previamente un proyecto
+Firebase existente; no se ejecutará desde esta integración. Streamlit conserva
+su alojamiento independiente y no se utiliza como servidor de archivos ni API.
