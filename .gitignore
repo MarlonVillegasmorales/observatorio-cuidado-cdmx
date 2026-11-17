@@ -7,3 +7,5 @@ __pycache__/
 *.db
 *.sqlite*
 .ipynb_checkpoints/
+firebase-debug.log*
+.firebase/
