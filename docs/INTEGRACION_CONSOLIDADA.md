@@ -135,6 +135,15 @@ El último comando requiere iniciar sesión y seleccionar previamente un proyect
 Firebase existente; no se ejecutará desde esta integración. Streamlit conserva
 su alojamiento independiente y no se utiliza como servidor de archivos ni API.
 
+## Destino de revisión previsto
+
+- Proyecto Firebase: `proyecto-cuidado-21dcb`.
+- Sitio Hosting único identificado: `proyecto-cuidado-21dcb`.
+- Canal previsto: `revision-integracion`, con caducidad de 7 días.
+- `.firebaserc` asocia únicamente el proyecto predeterminado; no contiene
+  credenciales ni selecciona otra cuenta.
+- La vista previa no reemplaza el canal live ni el sitio principal.
+
 ## Cierre de validación local
 
 Automatizado:

@@ -665,7 +665,7 @@ class ProjectScreen extends StatelessWidget {
           const SizedBox(height: 20),
           const Text('Fuentes y metodología', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _ink)),
           const SizedBox(height: 8),
-          const _Card(child: Text('Se conservan fuentes tabulares y cartográficas del repositorio. ENUT describe CDMX; la distribución proporcional por alcaldía es exploratoria. El matching demostrativo compara tipo de servicio, días, horario, radio y cupo.', style: TextStyle(color: _muted, height: 1.45))),
+          const _Card(child: Text('Se conservan fuentes tabulares y cartográficas del repositorio. ENUT describe CDMX; la distribución proporcional por alcaldía es exploratoria. Flutter no está conectado al matching Python ni a simuladores; la búsqueda es únicamente un recorrido sintético.', style: TextStyle(color: _muted, height: 1.45))),
           const SizedBox(height: 16),
           const Text('Limitaciones esenciales', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _ink)),
           const SizedBox(height: 8),
