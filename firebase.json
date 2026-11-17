@@ -1,5 +1,7 @@
 {
-  "hosting": {
+  "hosting": [
+    {
+      "target": "observatorio",
     "public": "cliente_flutter/build/web",
     "ignore": [
       "firebase.json",
@@ -69,5 +71,6 @@
         ]
       }
     ]
-  }
+    }
+  ]
 }

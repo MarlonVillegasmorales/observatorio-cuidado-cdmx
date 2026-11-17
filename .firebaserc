@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "proyecto-cuidado-21dcb"
+  },
+  "targets": {
+    "proyecto-cuidado-21dcb": {
+      "hosting": {
+        "observatorio": [
+          "proyecto-cuidado-21dcb"
+        ]
+      }
+    }
   }
 }
