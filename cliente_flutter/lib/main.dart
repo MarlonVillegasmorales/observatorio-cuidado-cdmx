@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 const _brand = Color(0xFF6D28D9);
 const _brandDark = Color(0xFF4C1D95);
@@ -7,6 +10,44 @@ const _page = Color(0xFFF8FAFC);
 const _ink = Color(0xFF172033);
 const _muted = Color(0xFF475569);
 const _border = Color(0xFFCBD5E1);
+
+class AlcaldiaData {
+  const AlcaldiaData({
+    required this.name,
+    required this.period,
+    required this.total,
+    required this.children,
+    required this.olderAdults,
+    required this.source,
+    required this.dataType,
+  });
+
+  final String name;
+  final String period;
+  final int total;
+  final int children;
+  final int olderAdults;
+  final String source;
+  final String dataType;
+
+  factory AlcaldiaData.fromJson(Map<String, dynamic> json) => AlcaldiaData(
+        name: json['alcaldia'] as String,
+        period: json['periodo'] as String,
+        total: json['poblacion_total'] as int,
+        children: json['poblacion_0_4'] as int,
+        olderAdults: json['poblacion_60_mas'] as int,
+        source: json['fuente'] as String,
+        dataType: json['tipo_dato'] as String,
+      );
+}
+
+Future<List<AlcaldiaData>> _loadAlcaldias() async {
+  final raw = await rootBundle.loadString('assets/data/alcaldias.json');
+  final decoded = jsonDecode(raw) as List<dynamic>;
+  return decoded
+      .map((item) => AlcaldiaData.fromJson(item as Map<String, dynamic>))
+      .toList(growable: false);
+}
 
 void main() => runApp(const ObservatorioApp());
 
@@ -84,12 +125,12 @@ class _ObservatoryShellState extends State<ObservatoryShell> {
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final content = IndexedStack(
       index: _selectedIndex,
-      children: const [
-        HomeScreen(),
-        MapScreen(),
-        CompareScreen(),
-        SearchScreen(),
-        ProjectScreen(),
+      children: [
+        const HomeScreen(),
+        MapScreen(active: _selectedIndex == 1),
+        const CompareScreen(),
+        const SearchScreen(),
+        const ProjectScreen(),
       ],
     );
     return Scaffold(
@@ -264,7 +305,9 @@ class _ActionCard extends StatelessWidget {
 const _alcaldias = ['Álvaro Obregón', 'Azcapotzalco', 'Benito Juárez', 'Coyoacán', 'Cuajimalpa', 'Cuauhtémoc', 'Gustavo A. Madero', 'Iztacalco', 'Iztapalapa', 'La Magdalena Contreras', 'Miguel Hidalgo', 'Milpa Alta', 'Tláhuac', 'Tlalpan', 'Venustiano Carranza', 'Xochimilco'];
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  const MapScreen({super.key, required this.active});
+
+  final bool active;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -272,9 +315,66 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   String? _selected;
+  Future<List<AlcaldiaData>>? _dataFuture;
 
   @override
-  Widget build(BuildContext context) => _Page(
+  void initState() {
+    super.initState();
+    if (widget.active) {
+      _dataFuture = _loadAlcaldias();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MapScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) {
+      final future = _loadAlcaldias();
+      setState(() {
+        _dataFuture = future;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.active) {
+      return const SizedBox.shrink();
+    }
+    return FutureBuilder<List<AlcaldiaData>>(
+        future: _dataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const _Page(
+              kicker: 'Explorador territorial',
+              title: 'No se pudieron cargar los datos',
+              child: _Notice(
+                child: 'El archivo territorial estático no está disponible. '
+                    'La aplicación no ejecuta ETL ni descarga datos durante la visita.',
+              ),
+            );
+          }
+          if (!snapshot.hasData) {
+            return const _Page(
+              kicker: 'Explorador territorial',
+              title: 'Cargando datos territoriales',
+              child: Center(child: Text('Cargando datos preparados...')),
+            );
+          }
+          return _renderMap(context, snapshot.data!);
+        },
+      );
+  }
+
+  Widget _renderMap(BuildContext context, List<AlcaldiaData> data) {
+    AlcaldiaData? selectedData;
+    for (final item in data) {
+      if (item.name == _selected) {
+        selectedData = item;
+        break;
+      }
+    }
+    return _Page(
         kicker: 'Explorador territorial',
         title: 'Explora tu alcaldía',
         child: Column(
@@ -293,24 +393,25 @@ class _MapScreenState extends State<MapScreen> {
             ),
             const SizedBox(height: 16),
             _MapPlaceholder(selected: _selected),
-            if (_selected != null) ...[
+            if (selectedData != null) ...[
               const SizedBox(height: 20),
-              Text('Datos de $_selected', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, color: _ink)),
-              const Text('Fuente: INEGI, Censo 2020 (ITER). Cartografía: Portal de Datos Abiertos de CDMX.', style: TextStyle(color: _muted, fontSize: 13)),
+              Text('Datos de ${selectedData.name}', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, color: _ink)),
+              Text('${selectedData.source} · periodo ${selectedData.period} · ${selectedData.dataType}', style: const TextStyle(color: _muted, fontSize: 13)),
               const SizedBox(height: 12),
-              const Wrap(spacing: 10, runSpacing: 10, children: [
-                _Metric(title: 'Población total', value: 'Demo', note: 'Dato preparado'),
-                _Metric(title: '0 a 4 años', value: 'Demo', note: 'Intervalo exacto'),
-                _Metric(title: '60 años o más', value: 'Demo', note: 'Suma técnica'),
+              Wrap(spacing: 10, runSpacing: 10, children: [
+                _Metric(title: 'Población total', value: '${selectedData.total}', note: 'Personas registradas'),
+                _Metric(title: '0 a 4 años', value: '${selectedData.children}', note: 'Intervalo exacto'),
+                _Metric(title: '60 años o más', value: '${selectedData.olderAdults}', note: 'Suma de grupos'),
               ]),
               const SizedBox(height: 16),
-              const _Card(child: _AgeBars()),
+              _Card(child: _AgeBars(data: selectedData)),
               const SizedBox(height: 12),
               const _Card(child: Text('Los conteos describen población registrada y no prueban necesidad de cuidado, demanda efectiva ni impacto social.', style: TextStyle(color: _muted, height: 1.4))),
             ],
           ],
         ),
       );
+  }
 }
 
 class _MapPlaceholder extends StatelessWidget {
@@ -352,15 +453,20 @@ class _Metric extends StatelessWidget {
 }
 
 class _AgeBars extends StatelessWidget {
-  const _AgeBars();
+  const _AgeBars({required this.data});
+  final AlcaldiaData data;
 
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('Población por grupos de edad', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: _ink)),
         const SizedBox(height: 4),
-        const Text('Representación visual sintética para esta fase.', style: TextStyle(color: _muted, fontSize: 13)),
+        const Text('Conteos observados del archivo territorial estático.', style: TextStyle(color: _muted, fontSize: 13)),
         const SizedBox(height: 14),
-        for (final item in const [('0–14 años', .72), ('15–59 años', .95), ('60 años o más', .38)])
+        for (final item in [
+          ('0–4 años', data.children / data.total),
+          ('5–59 años', (data.total - data.children - data.olderAdults) / data.total),
+          ('60 años o más', data.olderAdults / data.total),
+        ])
           Padding(padding: const EdgeInsets.only(bottom: 10), child: Row(children: [
             SizedBox(width: 105, child: Text(item.$1, style: const TextStyle(color: _muted, fontSize: 13))),
             Expanded(child: LinearProgressIndicator(value: item.$2, minHeight: 12, borderRadius: BorderRadius.circular(8), color: _brand, backgroundColor: _brandSoft)),

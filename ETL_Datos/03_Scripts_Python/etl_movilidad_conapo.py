@@ -1,15 +1,19 @@
 
 import pandas as pd
 from pathlib import Path
+import sys
 
-CARPETA_PROYECTO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from cuidado.pipelines.entregas import cargar_conapo, cargar_empresas, cargar_movilidad
+
+CARPETA_PROYECTO = Path(__file__).resolve().parents[2]
 
 CARPETA_ORIGINALES = (
-    CARPETA_PROYECTO / "01_Datos originales"
+    CARPETA_PROYECTO / "ETL_Datos" / "01_Datos originales"
 )
 
 CARPETA_PROCESADOS = (
-    CARPETA_PROYECTO / "02_Datos_Procesados"
+    CARPETA_PROYECTO / "ETL_Datos" / "02_Datos_Procesados"
 )
 
 
@@ -30,8 +34,8 @@ def procesar_conapo():
     )
 
     if archivo_salida.exists():
-        print("El CSV procesado ya existe.")
-        print("Se conserva sin modificaciones.")
+        data = cargar_conapo(archivo_salida)
+        print(f"El CSV procesado ya existe y es válido ({len(data)} filas).")
         return
 
     df = pd.read_csv(archivo_origen)
@@ -82,8 +86,8 @@ def procesar_movilidad():
     )
 
     if archivo_salida.exists():
-        print("El CSV de movilidad ya existe.")
-        print("Se conserva sin modificaciones.")
+        data = cargar_movilidad(archivo_salida)
+        print(f"El CSV de movilidad ya existe y es válido ({len(data)} filas).")
         return
 
     df_agency = pd.read_csv(
@@ -191,8 +195,8 @@ def procesar_empresas():
     )
 
     if archivo_salida.exists():
-        print("El CSV de empresas ya existe.")
-        print("Se conserva sin modificaciones.")
+        data = cargar_empresas(archivo_salida)
+        print(f"El CSV de empresas ya existe y es válido ({len(data)} filas).")
         return
 
     archivo_excel = (

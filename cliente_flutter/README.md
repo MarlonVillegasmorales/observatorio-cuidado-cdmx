@@ -5,9 +5,10 @@ aplicación contiene cinco destinos navegables: Inicio, Mapa, Comparar,
 Búsqueda demo y Proyecto.
 
 Esta fase usa Material 3, navegación inferior en pantallas estrechas y
-navegación lateral desde 900 px. El mapa, indicadores y resultados son
-demostrativos; no hay API, persistencia ni datos personales. Streamlit sigue
-siendo la aplicación existente y no se modifica desde este cliente.
+navegación lateral desde 900 px. El mapa consume un archivo JSON estático
+derivado del GeoParquet territorial preparado; no ejecuta ETL, no usa
+Streamlit como API y no recoge datos personales. La búsqueda y comparación
+siguen siendo demostrativas, sin API, persistencia ni reservas.
 
 ```powershell
 flutter analyze

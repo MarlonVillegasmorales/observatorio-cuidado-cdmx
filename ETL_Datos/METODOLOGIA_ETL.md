@@ -102,19 +102,11 @@ controles de integridad de claves o calidad semántica.
 
 ### 7. Reproducibilidad
 
-Se ejecutó el ETL integrado desde cero en
-un entorno aislado.
-
-- Código de salida: 0.
-- Duración observada: 1.27 segundos.
-- Bases generadas: 3 de 3.
-
-Los resultados regenerados fueron equivalentes
-a las bases principales en dimensiones,
-columnas y contenido.
-
-La comparación permitió tolerancias numéricas
-de 1e-10.
+En esta copia se validaron los tres CSV procesados existentes con
+los cargadores de integración. No se ejecutó una regeneración desde
+cero porque las fuentes originales no están incluidas. Por ello, la
+equivalencia de los procesados no se presenta como reproducibilidad
+independiente de las fuentes.
 
 ### 8. Integración territorial
 
@@ -150,11 +142,12 @@ para preservar los ceros iniciales.
 ### 10. Conclusión
 
 La fase ETL permitió integrar y validar tres
-conjuntos de datos para el observatorio.
+conjuntos de datos procesados para el observatorio.
 
-Las pruebas demostraron que los archivos pueden
-regenerarse desde cero y obtener resultados
-equivalentes a las bases principales.
+Las pruebas locales validaron estructura, claves,
+granularidad y límites conocidos; la regeneración
+desde cero queda pendiente hasta disponer de las
+fuentes originales autorizadas.
 
 La siguiente fase consistirá en integrar estos
 resultados con otros indicadores del sistema

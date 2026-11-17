@@ -108,28 +108,17 @@ Los archivos CSV procesados se almacenan en
 - Validar los resultados después de cada procesamiento.
 - No utilizar las empresas sintéticas como datos reales.
 
-### 11. Pruebas de integración y reproducibilidad
+### 11. Validación de integración y reproducibilidad
 
-Se realizó una ejecución conjunta del ETL en un entorno
-aislado, inicialmente sin archivos CSV procesados.
+En esta copia se validaron los CSV procesados existentes con los
+cargadores canónicos del proyecto. Se verificaron 320 registros de
+CONAPO, 22,532 relaciones ruta-parada y 50 empresas sintéticas,
+incluidas las 16 alcaldías y los identificadores requeridos.
 
-Resultados:
-- CONAPO: 320 registros y 27 columnas.
-- Movilidad GTFS: 22,532 registros y 9 columnas.
-- Empresas B2B2C: 50 registros y 12 columnas.
-- Valores faltantes: 0 en las tres bases.
-- Filas completamente duplicadas: 0.
-- Código de salida del ETL: 0.
-- Tiempo observado de ejecución: 1.27 segundos.
-
-Las tres bases regeneradas presentaron dimensiones,
-columnas y datos equivalentes a los archivos principales.
-
-La comparación numérica utilizó una tolerancia de
-1e-10 para contemplar pequeñas diferencias de precisión.
-
-La reproducibilidad se verificó con las mismas fuentes,
-scripts y configuración del entorno de pruebas.
+No se declara una regeneración independiente ni reproducibilidad completa:
+las fuentes originales no están incluidas en esta copia. Para comprobar la
+reproducibilidad se deben incorporar esas fuentes con autorización y ejecutar
+el ETL en un entorno de prueba separado.
 
 ### 12. Integración territorial
 
@@ -151,7 +140,8 @@ el proceso ETL.
 
 Para regenerar los resultados desde cero, es necesario
 incorporar los archivos originales correspondientes
-en la carpeta `01_Datos originales`.
+en la carpeta `01_Datos originales` y validar sus
+condiciones de redistribución.
 
 Los archivos originales no están incluidos en esta
 primera publicación mientras se revisan sus condiciones

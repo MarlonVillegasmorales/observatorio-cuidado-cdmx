@@ -1,0 +1,162 @@
+[
+  {
+    "clave_alcaldia": "09 002",
+    "alcaldia": "Azcapotzalco",
+    "periodo": "2020",
+    "poblacion_total": 432205,
+    "poblacion_0_4": 21060,
+    "poblacion_60_mas": 78650,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 014",
+    "alcaldia": "Benito Juárez",
+    "periodo": "2020",
+    "poblacion_total": 434153,
+    "poblacion_0_4": 16642,
+    "poblacion_60_mas": 87344,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 003",
+    "alcaldia": "Coyoacán",
+    "periodo": "2020",
+    "poblacion_total": 614447,
+    "poblacion_0_4": 26627,
+    "poblacion_60_mas": 126592,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 004",
+    "alcaldia": "Cuajimalpa de Morelos",
+    "periodo": "2020",
+    "poblacion_total": 217729,
+    "poblacion_0_4": 14255,
+    "poblacion_60_mas": 25803,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 015",
+    "alcaldia": "Cuauhtémoc",
+    "periodo": "2020",
+    "poblacion_total": 545884,
+    "poblacion_0_4": 26032,
+    "poblacion_60_mas": 93809,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 005",
+    "alcaldia": "Gustavo A. Madero",
+    "periodo": "2020",
+    "poblacion_total": 1173351,
+    "poblacion_0_4": 63262,
+    "poblacion_60_mas": 203469,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 006",
+    "alcaldia": "Iztacalco",
+    "periodo": "2020",
+    "poblacion_total": 404695,
+    "poblacion_0_4": 20466,
+    "poblacion_60_mas": 70907,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 007",
+    "alcaldia": "Iztapalapa",
+    "periodo": "2020",
+    "poblacion_total": 1835486,
+    "poblacion_0_4": 103148,
+    "poblacion_60_mas": 262064,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 008",
+    "alcaldia": "La Magdalena Contreras",
+    "periodo": "2020",
+    "poblacion_total": 247664,
+    "poblacion_0_4": 13012,
+    "poblacion_60_mas": 38073,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 016",
+    "alcaldia": "Miguel Hidalgo",
+    "periodo": "2020",
+    "poblacion_total": 414470,
+    "poblacion_0_4": 19979,
+    "poblacion_60_mas": 71111,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 009",
+    "alcaldia": "Milpa Alta",
+    "periodo": "2020",
+    "poblacion_total": 152832,
+    "poblacion_0_4": 10348,
+    "poblacion_60_mas": 16437,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 012",
+    "alcaldia": "Tlalpan",
+    "periodo": "2020",
+    "poblacion_total": 700251,
+    "poblacion_0_4": 34857,
+    "poblacion_60_mas": 108894,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 011",
+    "alcaldia": "Tláhuac",
+    "periodo": "2020",
+    "poblacion_total": 392373,
+    "poblacion_0_4": 23715,
+    "poblacion_60_mas": 46196,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 017",
+    "alcaldia": "Venustiano Carranza",
+    "periodo": "2020",
+    "poblacion_total": 443704,
+    "poblacion_0_4": 23147,
+    "poblacion_60_mas": 78964,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 013",
+    "alcaldia": "Xochimilco",
+    "periodo": "2020",
+    "poblacion_total": 442243,
+    "poblacion_0_4": 24870,
+    "poblacion_60_mas": 60987,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  },
+  {
+    "clave_alcaldia": "09 010",
+    "alcaldia": "Álvaro Obregón",
+    "periodo": "2020",
+    "poblacion_total": 759141,
+    "poblacion_0_4": 38484,
+    "poblacion_60_mas": 122318,
+    "fuente": "INEGI, Censo 2020 (ITER)",
+    "tipo_dato": "observado"
+  }
+]

@@ -18,6 +18,10 @@ void main() {
 
     await tester.tap(find.text('Mapa'));
     await tester.pumpAndSettle();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await tester.pumpAndSettle();
     expect(find.text('Explora tu alcaldía'), findsOneWidget);
 
     await tester.tap(find.byType(DropdownButtonFormField<String>));

@@ -158,6 +158,7 @@ def main():
         ["Alto", "Medio", "Bajo"],
         size=len(df_empresas)
     )
+    df_empresas["es_simulada"] = True
 
     # ==========================================
     # VALIDACIÓN DE RESULTADOS
