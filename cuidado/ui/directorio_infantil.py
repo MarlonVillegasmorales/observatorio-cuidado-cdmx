@@ -27,10 +27,19 @@ def mostrar_directorio(grupos, clave):
     seleccion = [grupos[clave]] if clave else list(grupos.values())
     resumen = {k: sum(g["resumen"][k] for g in seleccion) for k in seleccion[0]["resumen"]}
     st.subheader("Oferta infantil documentada")
-    st.write(f"{resumen['sedes_unicas']} sedes · {resumen['con_horario']} con horario · "
-             f"{resumen['con_capacidad_exacta']} con capacidad exacta · "
-             f"{resumen['con_rango_o_tope']} con rango o límite · "
-             f"{resumen['con_vacantes_fechadas']} con vacantes fechadas")
+    st.write(f"De {resumen['sedes_unicas']} centros documentados, "
+             f"{resumen['con_horario']} tienen un horario publicado.")
+    with st.expander("Lugares y disponibilidad"):
+        st.write(f"{resumen['con_capacidad_exacta']} centros publicaron cuántas personas podían atender "
+                 f"y {resumen['con_rango_o_tope']} publicaron un rango o límite.")
+        st.write(f"{resumen['con_vacantes_fechadas']} centros informaron lugares libres con fecha."
+                 if resumen['con_vacantes_fechadas'] else "Todavía se desconoce cuántos lugares están libres.")
+    if not clave:
+        with st.expander("¿Cuántas personas cuidan en México?"):
+            st.write("En México, 31.7 millones de personas de 15 años o más cuidaron a alguien de su hogar o de otro hogar en 2022. Entre quienes eran cuidadores principales, las mujeres dedicaron en promedio 39 horas por semana y los hombres, 31.")
+            st.markdown("[INEGI · ENASIC 2022 · resultados nacionales](https://www.inegi.org.mx/programas/enasic/2022/)")
+    with st.expander("Cómo protegemos tus datos"):
+        st.write("Puedes consultar el mapa sin dar tu nombre ni tu ubicación. Los puntos representan centros de cuidado. El directorio publica domicilios institucionales y cifras por sede. Los datos de niñas, niños, familias y personas trabajadoras quedan fuera de este directorio.")
     sedes = [s for g in seleccion for s in g["sedes"]]
     st.caption(f"{sum('punto' in s for s in sedes)} sedes con coordenadas. "
                "Los horarios y capacidades corresponden al periodo de cada fuente.")

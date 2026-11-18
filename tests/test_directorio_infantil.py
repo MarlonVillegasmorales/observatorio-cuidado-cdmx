@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from scripts.importar_directorio_infantil import PUBLICOS
 
 
 def test_matriz_y_sedes_del_directorio():
@@ -15,6 +16,7 @@ def test_matriz_y_sedes_del_directorio():
             assert sede["id"] not in ids
             ids.add(sede["id"])
             assert all(u["nombre"] and u["fuente_url"] for u in sede["unidades"])
+            assert all(set(u) <= PUBLICOS for u in sede["unidades"])
         for campo, necesarios in {
             "con_horario": ("apertura", "cierre"),
             "con_capacidad_exacta": ("capacidad_exacta",),

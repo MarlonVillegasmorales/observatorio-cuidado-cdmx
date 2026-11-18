@@ -45,10 +45,43 @@ class OfertaInfantil extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             Text(
-              "${total('sedes_unicas')} sedes · ${total('con_horario')} con horario · ${total('con_capacidad_exacta')} con capacidad exacta · ${total('con_rango_o_tope')} con rango o límite · ${total('con_vacantes_fechadas')} con vacantes fechadas",
+              "De ${total('sedes_unicas')} centros documentados, ${total('con_horario')} tienen un horario publicado.",
             ),
             Text(
               "${sedes.where((s) => s.containsKey('punto')).length} sedes con coordenadas. Los datos corresponden al periodo de cada fuente.",
+            ),
+            ExpansionTile(
+              title: const Text('Lugares y disponibilidad'),
+              children: [
+                Text(
+                  "${total('con_capacidad_exacta')} centros publicaron cuántas personas podían atender y ${total('con_rango_o_tope')} publicaron un rango o límite.",
+                ),
+                Text(
+                  total('con_vacantes_fechadas') == 0
+                      ? 'Todavía se desconoce cuántos lugares están libres.'
+                      : "${total('con_vacantes_fechadas')} centros informaron lugares libres con fecha.",
+                ),
+              ],
+            ),
+            if (alcaldia == null)
+              const ExpansionTile(
+                title: Text('¿Cuántas personas cuidan en México?'),
+                children: [
+                  Text(
+                    'En México, 31.7 millones de personas de 15 años o más cuidaron a alguien de su hogar o de otro hogar en 2022. Entre quienes eran cuidadores principales, las mujeres dedicaron en promedio 39 horas por semana y los hombres, 31.',
+                  ),
+                  SelectableText(
+                    'INEGI · ENASIC 2022 · resultados nacionales\nhttps://www.inegi.org.mx/programas/enasic/2022/',
+                  ),
+                ],
+              ),
+            const ExpansionTile(
+              title: Text('Cómo protegemos tus datos'),
+              children: [
+                Text(
+                  'Puedes consultar el mapa sin dar tu nombre ni tu ubicación. Los puntos representan centros de cuidado. El directorio publica domicilios institucionales y cifras por sede. Los datos de niñas, niños, familias y personas trabajadoras quedan fuera de este directorio.',
+                ),
+              ],
             ),
             if (alcaldia != null)
               ExpansionTile(

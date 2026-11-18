@@ -7,6 +7,12 @@ from pathlib import Path
 from zipfile import ZipFile
 
 ASSETS = Path(__file__).resolve().parents[1] / "cliente_flutter/assets/data"
+PUBLICOS = frozenset("""
+    red nombre domicilio periodo_fuente fuente_url clave_origen apertura cierre
+    apertura_extra cierre_extra periodo_horario capacidad_exacta capacidad_min
+    capacidad_max periodo_capacidad fuente_capacidad_url vacantes fecha_vacantes
+    fuente_vacantes_url nota
+""".split())
 
 
 def preparar(paquete):
@@ -34,8 +40,7 @@ def preparar(paquete):
         sede = por_id[identidad]
         if fila["latitud"] and fila["longitud"] and "punto" not in sede:
             sede["punto"] = [float(fila["latitud"]), float(fila["longitud"])]
-        sede["unidades"].append({k: v for k, v in fila.items() if v and k not in
-                                  ("cvegeo", "id_sede", "latitud", "longitud", "alcaldia")})
+        sede["unidades"].append({k: v for k, v in fila.items() if v and k in PUBLICOS})
     if set(grupos) != set(nombres) or any(len(g["sedes"]) != g["resumen"]["sedes_unicas"] for g in grupos.values()):
         raise ValueError("La matriz territorial no coincide con el directorio")
     return grupos
