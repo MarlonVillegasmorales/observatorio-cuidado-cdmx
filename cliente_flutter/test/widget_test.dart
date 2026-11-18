@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:cliente_flutter/main.dart';
 
@@ -14,11 +15,33 @@ void main() {
     expect(find.text('Proyecto'), findsOneWidget);
   });
 
+  testWidgets('las tarjetas de inicio abren la sección correspondiente', (tester) async {
+    await tester.pumpWidget(const ObservatorioApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Explorar mapa').first);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('nav_mapa')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('nav_inicio')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Comparar alcaldías').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Compara dos alcaldías'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('nav_inicio')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Probar búsqueda').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Paso 1 de 4 · Servicio'), findsOneWidget);
+  });
+
   testWidgets('navega a mapa y permite seleccionar una alcaldía', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: MapScreen(
+            geometryFuture: rootBundle.loadString('assets/data/alcaldias.geojson'),
             dataFuture: Future.value([
               const AlcaldiaData(
                 name: 'Iztapalapa',
@@ -43,10 +66,60 @@ void main() {
     await tester.tap(find.text('Iztapalapa').last);
     await tester.pumpAndSettle();
     expect(find.text('Datos de Iztapalapa'), findsOneWidget);
+
+    await tester.tap(find.text('Ver toda CDMX'));
+    await tester.pumpAndSettle();
+    expect(find.text('Datos de Iztapalapa'), findsNothing);
+  });
+
+  testWidgets('la cartografía fallida conserva consulta por lista', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MapScreen(
+            dataFuture: Future.value([
+              const AlcaldiaData(
+                name: 'Iztapalapa',
+                period: '2020',
+                total: 1835486,
+                children: 103148,
+                children14: 366835,
+                olderAdults: 262064,
+                source: 'INEGI, Censo 2020 (ITER)',
+                dataType: 'observado',
+              ),
+            ]),
+            geometryFuture: Future.value('{"type":"FeatureCollection","features":[]}'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Puedes seguir consultando por la lista'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('avanza la búsqueda demo', (tester) async {
-    await tester.pumpWidget(const ObservatorioApp());
+    await tester.pumpWidget(ObservatorioApp(
+      matchingExecutor: ({
+        required String type,
+        required String start,
+        required String end,
+        required List<String> days,
+        required double radiusKm,
+      }) async => {
+        'demo': true,
+        'results': [
+          {
+            'estado': 'recomendada',
+            'motivo': 'compatible',
+            'distancia_km': 0.0,
+          },
+        ],
+      },
+    ));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('nav_busqueda')));
     await tester.pumpAndSettle();
@@ -66,7 +139,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ver resultados'));
     await tester.pumpAndSettle();
-    expect(find.text('Ejemplo sintético predefinido'), findsOneWidget);
+    expect(find.text('Recomendación sintética'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Restablecer'));
     await tester.tap(find.text('Restablecer'));
@@ -111,6 +184,30 @@ void main() {
       find.text('Personas por cada 100 habitantes · Censo 2020 observado'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('calcula el simulador mediante el servicio inyectado', (tester) async {
+    await tester.pumpWidget(ObservatorioApp(
+      simulatorExecutor: (parameters) async => {
+        'demo': true,
+        'b2b': {
+          'ahorro_bruto': 120000.0,
+          'beneficio_neto': null,
+        },
+        'b2g': {
+          'isn_impuesto': 1000.0,
+          'imss_patronal': 2000.0,
+          'infonavit_aportacion': 500.0,
+        },
+      },
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav_simuladores')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Calcular escenario'));
+    await tester.tap(find.text('Calcular escenario'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Beneficio neto: no calculable'), findsOneWidget);
   });
 
   testWidgets('mantiene el shell en los anchos objetivo', (tester) async {

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 const _brand = Color(0xFF6D28D9);
 const _brandDark = Color(0xFF4C1D95);
@@ -52,10 +53,33 @@ Future<List<AlcaldiaData>> _loadAlcaldias() async {
       .toList(growable: false);
 }
 
+const _apiUrl = String.fromEnvironment(
+  'OBSERVATORIO_API_URL',
+  defaultValue: 'http://127.0.0.1:8000',
+);
+
+typedef MatchingExecutor = Future<Map<String, dynamic>> Function({
+  required String type,
+  required String start,
+  required String end,
+  required List<String> days,
+  required double radiusKm,
+});
+
+typedef SimulatorExecutor = Future<Map<String, dynamic>> Function(
+  Map<String, dynamic> parameters,
+);
+
 void main() => runApp(const ObservatorioApp());
 
 class ObservatorioApp extends StatelessWidget {
-  const ObservatorioApp({super.key});
+  const ObservatorioApp({
+    super.key,
+    this.matchingExecutor,
+    this.simulatorExecutor,
+  });
+  final MatchingExecutor? matchingExecutor;
+  final SimulatorExecutor? simulatorExecutor;
 
   @override
   Widget build(BuildContext context) {
@@ -92,13 +116,22 @@ class ObservatorioApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const ObservatoryShell(),
+      home: ObservatoryShell(
+        matchingExecutor: matchingExecutor,
+        simulatorExecutor: simulatorExecutor,
+      ),
     );
   }
 }
 
 class ObservatoryShell extends StatefulWidget {
-  const ObservatoryShell({super.key});
+  const ObservatoryShell({
+    super.key,
+    this.matchingExecutor,
+    this.simulatorExecutor,
+  });
+  final MatchingExecutor? matchingExecutor;
+  final SimulatorExecutor? simulatorExecutor;
 
   @override
   State<ObservatoryShell> createState() => _ObservatoryShellState();
@@ -112,6 +145,7 @@ class _ObservatoryShellState extends State<ObservatoryShell> {
     NavigationDestination(key: Key('nav_mapa'), icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Mapa'),
     NavigationDestination(key: Key('nav_comparar'), icon: Icon(Icons.compare_arrows), label: 'Comparar'),
     NavigationDestination(key: Key('nav_busqueda'), icon: Icon(Icons.search), label: 'Búsqueda'),
+    NavigationDestination(key: Key('nav_simuladores'), icon: Icon(Icons.calculate_outlined), label: 'Simuladores'),
     NavigationDestination(key: Key('nav_proyecto'), icon: Icon(Icons.info_outline), selectedIcon: Icon(Icons.info), label: 'Proyecto'),
   ];
 
@@ -120,6 +154,7 @@ class _ObservatoryShellState extends State<ObservatoryShell> {
     NavigationRailDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: Text('Mapa')),
     NavigationRailDestination(icon: Icon(Icons.compare_arrows), label: Text('Comparar')),
     NavigationRailDestination(icon: Icon(Icons.search), label: Text('Búsqueda demo')),
+    NavigationRailDestination(icon: Icon(Icons.calculate_outlined), label: Text('Simuladores')),
     NavigationRailDestination(icon: Icon(Icons.info_outline), selectedIcon: Icon(Icons.info), label: Text('Proyecto')),
   ];
 
@@ -129,10 +164,11 @@ class _ObservatoryShellState extends State<ObservatoryShell> {
     final content = IndexedStack(
       index: _selectedIndex,
       children: [
-        const HomeScreen(),
+        HomeScreen(onNavigate: (index) => setState(() => _selectedIndex = index)),
         const MapScreen(),
         const CompareScreen(),
-        const SearchScreen(),
+        SearchScreen(matchingExecutor: widget.matchingExecutor),
+        SimulatorScreen(simulatorExecutor: widget.simulatorExecutor),
         const ProjectScreen(),
       ],
     );
@@ -244,7 +280,8 @@ class _Notice extends StatelessWidget {
 }
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, required this.onNavigate});
+  final ValueChanged<int> onNavigate;
 
   @override
   Widget build(BuildContext context) => _Page(
@@ -262,7 +299,7 @@ class HomeScreen extends StatelessWidget {
             LayoutBuilder(builder: (context, constraints) {
               final columns = constraints.maxWidth >= 700 ? 3 : 1;
               return GridView.builder(
-                itemCount: 3,
+                itemCount: 4,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: columns,
                   crossAxisSpacing: 12,
@@ -271,10 +308,11 @@ class HomeScreen extends StatelessWidget {
                 ),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) => const [
-                  _ActionCard(icon: Icons.map_outlined, title: 'Explorar mapa', description: 'Consulta una alcaldía y sus datos demográficos.'),
-                  _ActionCard(icon: Icons.compare_arrows, title: 'Comparar alcaldías', description: 'Ordena indicadores demográficos autorizados.'),
-                  _ActionCard(icon: Icons.search, title: 'Probar búsqueda', description: 'Recorre un ejemplo de compatibilidad sintética.'),
+                itemBuilder: (context, index) => [
+                  _ActionCard(icon: Icons.map_outlined, title: 'Explorar mapa', description: 'Consulta una alcaldía y sus datos demográficos.', onTap: () => onNavigate(1)),
+                  _ActionCard(icon: Icons.compare_arrows, title: 'Comparar alcaldías', description: 'Compara indicadores demográficos observados.', onTap: () => onNavigate(2)),
+                  _ActionCard(icon: Icons.search, title: 'Probar búsqueda', description: 'Recorre un ejemplo demostrativo de búsqueda.', onTap: () => onNavigate(3)),
+                  _ActionCard(icon: Icons.calculate_outlined, title: 'Simuladores', description: 'Calcula escenarios B2B/B2G sintéticos.', onTap: () => onNavigate(4)),
                 ][index],
               );
             }),
@@ -284,14 +322,26 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _ActionCard extends StatelessWidget {
-  const _ActionCard({required this.icon, required this.title, required this.description});
+  const _ActionCard({required this.icon, required this.title, required this.description, required this.onTap});
   final IconData icon;
   final String title;
   final String description;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => _Card(
-        child: Row(
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: title,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            canRequestFocus: true,
+            borderRadius: BorderRadius.circular(16),
+            child: _Card(
+              child: Row(
           children: [
             CircleAvatar(backgroundColor: _brandSoft, foregroundColor: _brandDark, child: Icon(icon)),
             const SizedBox(width: 12),
@@ -302,14 +352,18 @@ class _ActionCard extends StatelessWidget {
             ])),
           ],
         ),
+            ),
+          ),
+        ),
       );
 }
 
 const _alcaldias = ['Álvaro Obregón', 'Azcapotzalco', 'Benito Juárez', 'Coyoacán', 'Cuajimalpa', 'Cuauhtémoc', 'Gustavo A. Madero', 'Iztacalco', 'Iztapalapa', 'La Magdalena Contreras', 'Miguel Hidalgo', 'Milpa Alta', 'Tláhuac', 'Tlalpan', 'Venustiano Carranza', 'Xochimilco'];
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key, this.dataFuture});
+  const MapScreen({super.key, this.dataFuture, this.geometryFuture});
   final Future<List<AlcaldiaData>>? dataFuture;
+  final Future<String>? geometryFuture;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -318,11 +372,13 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   String? _selected;
   late final Future<List<AlcaldiaData>> _dataFuture;
+  late final Future<String> _geometryFuture;
 
   @override
   void initState() {
     super.initState();
     _dataFuture = widget.dataFuture ?? _loadAlcaldias();
+    _geometryFuture = widget.geometryFuture ?? rootBundle.loadString('assets/data/alcaldias.geojson');
   }
 
   @override
@@ -374,7 +430,33 @@ class _MapScreenState extends State<MapScreen> {
               onChanged: (value) => setState(() => _selected = value),
             ),
             const SizedBox(height: 16),
-            _MapPlaceholder(selected: _selected),
+            FutureBuilder<String>(
+              future: _geometryFuture,
+              builder: (context, geometrySnapshot) {
+                if (geometrySnapshot.hasError) {
+                  return const _Notice(
+                    child: 'No se pudo cargar la cartografía. Puedes seguir consultando las 16 alcaldías mediante la lista.',
+                  );
+                }
+                if (!geometrySnapshot.hasData) {
+                  return const _Card(
+                    child: Center(child: Text('Cargando cartografía territorial...')),
+                  );
+                }
+                return _TerritorialMap(
+                  geoJson: geometrySnapshot.data!,
+                  selected: _selected,
+                  onSelected: (value) => setState(() => _selected = value),
+                  onReset: () => setState(() => _selected = null),
+                );
+              },
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () => setState(() => _selected = null),
+              icon: const Icon(Icons.location_on_outlined),
+              label: const Text('Ver toda CDMX'),
+            ),
             if (selectedData != null) ...[
               const SizedBox(height: 20),
               Text('Datos de ${selectedData.name}', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, color: _ink)),
@@ -396,24 +478,249 @@ class _MapScreenState extends State<MapScreen> {
   }
 }
 
-class _MapPlaceholder extends StatelessWidget {
-  const _MapPlaceholder({this.selected});
+class _GeoFeature {
+  const _GeoFeature({required this.key, required this.name, required this.rings});
+  final String key;
+  final String name;
+  final List<List<Offset>> rings;
+}
+
+class _TerritorialMap extends StatefulWidget {
+  const _TerritorialMap({
+    required this.geoJson,
+    required this.selected,
+    required this.onSelected,
+    required this.onReset,
+  });
+
+  final String geoJson;
+  final String? selected;
+  final ValueChanged<String> onSelected;
+  final VoidCallback onReset;
+
+  @override
+  State<_TerritorialMap> createState() => _TerritorialMapState();
+}
+
+class _TerritorialMapState extends State<_TerritorialMap> {
+  List<_GeoFeature> _features = const [];
+  String? _error;
+  final GlobalKey _mapKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      _features = _parseGeoJson(widget.geoJson);
+      if (_features.length != 16) {
+        throw const FormatException('Se esperaban 16 geometrías');
+      }
+    } catch (_) {
+      _error = 'La cartografía no pudo interpretarse.';
+    }
+  }
+
+  List<_GeoFeature> _parseGeoJson(String raw) {
+    final decoded = jsonDecode(raw) as Map<String, dynamic>;
+    final features = decoded['features'] as List<dynamic>;
+    final result = <_GeoFeature>[];
+    for (final item in features) {
+      final map = item as Map<String, dynamic>;
+      final properties = map['properties'] as Map<String, dynamic>;
+      final geometry = map['geometry'] as Map<String, dynamic>;
+      final rings = <List<Offset>>[];
+      if (geometry['type'] == 'Polygon') {
+        for (final ring in geometry['coordinates'] as List<dynamic>) {
+          rings.add(_parseRing(ring as List<dynamic>));
+        }
+      } else if (geometry['type'] == 'MultiPolygon') {
+        for (final polygon in geometry['coordinates'] as List<dynamic>) {
+          for (final ring in polygon as List<dynamic>) {
+            rings.add(_parseRing(ring as List<dynamic>));
+          }
+        }
+      }
+      if (rings.isEmpty) continue;
+      result.add(_GeoFeature(
+        key: properties['clave'] as String,
+        name: properties['alcaldia'] as String,
+        rings: rings,
+      ));
+    }
+    return result;
+  }
+
+  List<Offset> _parseRing(List<dynamic> ring) => ring
+      .map((point) {
+        final coordinates = point as List<dynamic>;
+        return Offset((coordinates[0] as num).toDouble(), (coordinates[1] as num).toDouble());
+      })
+      .toList(growable: false);
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return _Notice(child: '$_error Puedes seguir consultando por la lista.');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 250,
+          width: double.infinity,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: _brandSoft,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _border),
+          ),
+          child: GestureDetector(
+            key: _mapKey,
+            behavior: HitTestBehavior.opaque,
+            onTapUp: (details) => _selectAt(details.localPosition),
+            child: Semantics(
+              label: 'Mapa territorial de las 16 alcaldías',
+              button: true,
+              child: CustomPaint(
+                painter: _AlcaldiaPainter(features: _features, selected: widget.selected),
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
+    );
+  }
+
+  void _selectAt(Offset local) {
+    final bounds = _MapBounds.fromFeatures(_features);
+    final renderBox = _mapKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final mapping = _MapMapping.fromBounds(bounds, renderBox.size, const EdgeInsets.all(14));
+    final geo = mapping.toGeo(local);
+    for (final feature in _features) {
+      if (feature.rings.any((ring) => _pointInPolygon(geo, ring))) {
+        widget.onSelected(feature.name);
+        return;
+      }
+    }
+  }
+
+  bool _pointInPolygon(Offset point, List<Offset> ring) {
+    var inside = false;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      final a = ring[i];
+      final b = ring[j];
+      final intersect = ((a.dy > point.dy) != (b.dy > point.dy)) &&
+          (point.dx < (b.dx - a.dx) * (point.dy - a.dy) / ((b.dy - a.dy) == 0 ? 1 : b.dy - a.dy) + a.dx);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+}
+
+class _MapBounds {
+  const _MapBounds(this.minX, this.minY, this.maxX, this.maxY);
+  final double minX;
+  final double minY;
+  final double maxX;
+  final double maxY;
+
+  static _MapBounds fromFeatures(List<_GeoFeature> features) {
+    var minX = double.infinity;
+    var minY = double.infinity;
+    var maxX = -double.infinity;
+    var maxY = -double.infinity;
+    for (final feature in features) {
+      for (final ring in feature.rings) {
+        for (final point in ring) {
+          if (point.dx < minX) minX = point.dx;
+          if (point.dy < minY) minY = point.dy;
+          if (point.dx > maxX) maxX = point.dx;
+          if (point.dy > maxY) maxY = point.dy;
+        }
+      }
+    }
+    return _MapBounds(minX, minY, maxX, maxY);
+  }
+}
+
+class _MapMapping {
+  const _MapMapping(this.left, this.top, this.scaleX, this.scaleY, this.bounds);
+  final double left;
+  final double top;
+  final double scaleX;
+  final double scaleY;
+  final _MapBounds bounds;
+
+  static _MapMapping fromBounds(_MapBounds bounds, Size size, EdgeInsets padding) {
+    final width = size.width - padding.horizontal;
+    final height = size.height - padding.vertical;
+    final geoWidth = bounds.maxX - bounds.minX;
+    final geoHeight = bounds.maxY - bounds.minY;
+    final scale = (width / geoWidth) < (height / geoHeight)
+        ? width / geoWidth
+        : height / geoHeight;
+    final drawnWidth = geoWidth * scale;
+    final drawnHeight = geoHeight * scale;
+    return _MapMapping(
+      padding.left + (width - drawnWidth) / 2,
+      padding.top + (height - drawnHeight) / 2,
+      scale,
+      scale,
+      bounds,
+    );
+  }
+
+  Offset toCanvas(Offset geo) => Offset(
+        left + (geo.dx - bounds.minX) * scaleX,
+        top + (bounds.maxY - geo.dy) * scaleY,
+      );
+
+  Offset toGeo(Offset canvas) => Offset(
+        bounds.minX + (canvas.dx - left) / scaleX,
+        bounds.maxY - (canvas.dy - top) / scaleY,
+      );
+}
+
+class _AlcaldiaPainter extends CustomPainter {
+  const _AlcaldiaPainter({required this.features, required this.selected});
+  final List<_GeoFeature> features;
   final String? selected;
 
   @override
-  Widget build(BuildContext context) => Container(
-        height: 250,
-        width: double.infinity,
-        decoration: BoxDecoration(color: _brandSoft, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            const Icon(Icons.map, size: 72, color: Color(0xFFB7A1E8)),
-            Positioned(top: 14, left: 16, child: Text('16 alcaldías · mapa demo', style: TextStyle(color: _brandDark, fontWeight: FontWeight.w800))),
-            if (selected != null) Positioned(bottom: 14, child: Chip(label: Text(selected!), backgroundColor: Colors.white)),
-          ],
-        ),
-      );
+  void paint(Canvas canvas, Size size) {
+    final bounds = _MapBounds.fromFeatures(features);
+    final mapping = _MapMapping.fromBounds(bounds, size, const EdgeInsets.all(14));
+    for (final feature in features) {
+      final isSelected = feature.name == selected;
+      final paint = Paint()
+        ..color = isSelected ? _brand : _brandSoft
+        ..style = PaintingStyle.fill;
+      final border = Paint()
+        ..color = isSelected ? _brandDark : const Color(0xFF9A86C7)
+        ..strokeWidth = isSelected ? 2.5 : 1
+        ..style = PaintingStyle.stroke;
+      for (final ring in feature.rings) {
+        if (ring.length < 3) continue;
+        final path = Path();
+        final first = mapping.toCanvas(ring.first);
+        path.moveTo(first.dx, first.dy);
+        for (final point in ring.skip(1)) {
+          final canvasPoint = mapping.toCanvas(point);
+          path.lineTo(canvasPoint.dx, canvasPoint.dy);
+        }
+        path.close();
+        canvas.drawPath(path, paint);
+        canvas.drawPath(path, border);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _AlcaldiaPainter oldDelegate) =>
+      oldDelegate.selected != selected || oldDelegate.features != features;
 }
 
 class _Metric extends StatelessWidget {
@@ -565,7 +872,9 @@ class _BarLabel extends StatelessWidget {
 }
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.apiUrl = _apiUrl, this.matchingExecutor});
+  final String apiUrl;
+  final MatchingExecutor? matchingExecutor;
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -575,6 +884,59 @@ class _SearchScreenState extends State<SearchScreen> {
   int _step = 0;
   String _type = 'Cuidado infantil';
   bool _searched = false;
+  bool _loading = false;
+  String? _error;
+  List<dynamic> _results = const [];
+
+  Future<void> _executeSearch() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+      _searched = true;
+      _step = 3;
+    });
+    try {
+      final type = _type == 'Cuidado infantil' ? 'infantil' : 'mayores';
+      final body = widget.matchingExecutor != null
+          ? await widget.matchingExecutor!(
+              type: type,
+              start: '09:00',
+              end: '12:00',
+              days: const ['lun', 'mar'],
+              radiusKm: 10,
+            )
+          : await _fetchMatching(type);
+      if (!mounted) return;
+      setState(() {
+        _results = body['results'] as List<dynamic>;
+        _loading = false;
+      });
+    } catch (exc) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'No se pudo consultar el matching. ${exc.toString()}';
+        _loading = false;
+      });
+    }
+  }
+
+  Future<Map<String, dynamic>> _fetchMatching(String type) async {
+    final response = await http.post(
+      Uri.parse('${widget.apiUrl}/api/matching'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'tipo': type,
+        'inicio': '09:00',
+        'fin': '12:00',
+        'dias': ['lun', 'mar'],
+        'radio_km': 10,
+      }),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('El servicio respondió con código ${response.statusCode}');
+    }
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
 
   @override
   Widget build(BuildContext context) => _Page(
@@ -592,7 +954,12 @@ class _SearchScreenState extends State<SearchScreen> {
           if (_step == 0) DropdownButtonFormField<String>(initialValue: _type, decoration: const InputDecoration(labelText: '¿Qué tipo de cuidado buscas?'), items: const [DropdownMenuItem(value: 'Cuidado infantil', child: Text('Cuidado infantil')), DropdownMenuItem(value: 'Cuidado para personas mayores', child: Text('Cuidado para personas mayores'))], onChanged: (value) { if (value != null) setState(() => _type = value); }),
           if (_step == 1) const _Card(child: Text('Lunes y martes · 09:00 a 12:00', style: TextStyle(color: _ink, fontWeight: FontWeight.w700))),
           if (_step == 2) const _Card(child: Text('Distancia máxima aproximada: 10 km', style: TextStyle(color: _ink, fontWeight: FontWeight.w700))),
-          if (_step == 3) _SearchResult(searched: _searched, type: _type),
+          if (_step == 3) _MatchingResult(
+            loading: _loading,
+            error: _error,
+            results: _results,
+            onRetry: _executeSearch,
+          ),
           const SizedBox(height: 18),
           Wrap(spacing: 10, runSpacing: 10, children: [
             if (_step > 0) OutlinedButton(onPressed: () => setState(() => _step--), child: const Text('Atrás')),
@@ -601,13 +968,14 @@ class _SearchScreenState extends State<SearchScreen> {
                 _step = 0;
                 _type = 'Cuidado infantil';
                 _searched = false;
+                _error = null;
+                _results = const [];
               }),
               child: const Text('Restablecer'),
             ),
             FilledButton(onPressed: () => setState(() {
               if (_step == 2) {
-                _searched = true;
-                _step = 3;
+                _executeSearch();
               } else if (_step < 3) {
                 _step++;
               } else {
@@ -619,18 +987,233 @@ class _SearchScreenState extends State<SearchScreen> {
       );
 }
 
-class _SearchResult extends StatelessWidget {
-  const _SearchResult({required this.searched, required this.type});
-  final bool searched;
-  final String type;
+class _MatchingResult extends StatelessWidget {
+  const _MatchingResult({
+    required this.loading,
+    required this.error,
+    required this.results,
+    required this.onRetry,
+  });
+  final bool loading;
+  final String? error;
+  final List<dynamic> results;
+  final VoidCallback onRetry;
+
+  static const reasons = {
+    'compatible': 'Servicio, horario, días, distancia y cupo son compatibles.',
+    'sin_servicio_compatible': 'No hay un servicio sintético de este tipo.',
+    'sin_compatibilidad_horaria': 'La franja solicitada no coincide con la oferta.',
+    'fuera_de_radio': 'La oferta compatible está fuera de la distancia elegida.',
+    'sin_cupo': 'La oferta compatible no tiene cupo sintético disponible.',
+  };
 
   @override
-  Widget build(BuildContext context) => _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(searched ? 'Ejemplo sintético predefinido' : 'Completa los filtros', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: _ink)),
-        const SizedBox(height: 8),
-        Text(searched ? 'Ejemplo fijo de interfaz · $type · no consulta disponibilidad' : 'Ejecuta la búsqueda para ver el ejemplo fijo.', style: const TextStyle(color: _muted)),
-        if (searched) const Padding(padding: EdgeInsets.only(top: 8), child: Text('Resultado demostrativo; requiere verificación institucional y no confirma una plaza.', style: TextStyle(color: _muted, fontSize: 13))),
-      ]));
+  Widget build(BuildContext context) {
+    if (loading) {
+      return const _Card(
+        child: Column(children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 12),
+          Text('Consultando el motor de matching sintético...'),
+        ]),
+      );
+    }
+    if (error != null) {
+      return _Card(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('No se pudo obtener el resultado', style: TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          Text(error!, style: const TextStyle(color: _muted)),
+          const SizedBox(height: 12),
+          OutlinedButton(onPressed: onRetry, child: const Text('Reintentar')),
+        ]),
+      );
+    }
+    if (results.isEmpty) {
+      return const _Notice(child: 'No hubo solicitudes ni resultados para mostrar.');
+    }
+    return Column(
+      children: [
+        for (final raw in results.take(5))
+          _Card(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(raw['estado'] == 'recomendada'
+                  ? 'Recomendación sintética'
+                  : 'Sin compatibilidad en esta demostración'),
+              const SizedBox(height: 6),
+              Text(reasons[raw['motivo']] ?? 'Motivo no disponible',
+                  style: const TextStyle(color: _muted)),
+              if (raw['distancia_km'] != null)
+                Text('Distancia geográfica: ${raw['distancia_km']} km',
+                    style: const TextStyle(color: _muted, fontSize: 13)),
+            ]),
+          ),
+      ],
+    );
+  }
+}
+
+class SimulatorScreen extends StatefulWidget {
+  const SimulatorScreen({super.key, this.apiUrl = _apiUrl, this.simulatorExecutor});
+  final String apiUrl;
+  final SimulatorExecutor? simulatorExecutor;
+
+  @override
+  State<SimulatorScreen> createState() => _SimulatorScreenState();
+}
+
+class _SimulatorScreenState extends State<SimulatorScreen> {
+  int _employees = 100;
+  double _salary = 12000;
+  double _leavers = 10;
+  double _rotationReduction = 20;
+  double _costIntervention = 0;
+  bool _hasInterventionCost = false;
+  bool _loading = false;
+  String? _error;
+  Map<String, dynamic>? _result;
+
+  Future<void> _calculate() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+      _result = null;
+    });
+    try {
+      final parameters = {
+        'numero_empleadas': _employees,
+        'salario_promedio': _salary,
+        'bajas_anuales': _leavers,
+        'reduccion_rotacion_pct': _rotationReduction,
+        'costo_reclutamiento': 6000,
+        'costo_capacitacion': 4500,
+        'costo_vacante_productividad': 16800,
+        'costo_admin_transferencia': 3500,
+        'dias_cotizados': 365,
+        'factor_integracion_sbc': 1.049315,
+        'tasa_imss_patronal': 0.204,
+        'tasa_isn_cdmx': 0.04,
+        'tasa_infonavit': 0.05,
+        'costo_intervencion': _hasInterventionCost ? _costIntervention : null,
+      };
+      final body = widget.simulatorExecutor != null
+          ? await widget.simulatorExecutor!(parameters)
+          : await _fetchSimulator(parameters);
+      if (!mounted) return;
+      setState(() {
+        _result = body;
+        _loading = false;
+      });
+    } catch (exc) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'No se pudo calcular el escenario. ${exc.toString()}';
+        _loading = false;
+      });
+    }
+  }
+
+  Future<Map<String, dynamic>> _fetchSimulator(
+    Map<String, dynamic> parameters,
+  ) async {
+    final response = await http.post(
+      Uri.parse('${widget.apiUrl}/api/simular'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode(parameters),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('El servicio respondió con código ${response.statusCode}');
+    }
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  @override
+  Widget build(BuildContext context) => _Page(
+        kicker: 'Escenarios sintéticos',
+        title: 'Simuladores B2B y B2G',
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const _Notice(child: 'Estos resultados son ilustrativos. No estiman impacto observado ni beneficio neto sin costo de intervención.'),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<int>(
+            initialValue: _employees,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Número de empleadas'),
+            items: const [
+              DropdownMenuItem(value: 50, child: Text('50 empleadas')),
+              DropdownMenuItem(value: 100, child: Text('100 empleadas')),
+              DropdownMenuItem(value: 200, child: Text('200 empleadas')),
+            ],
+            onChanged: (value) => setState(() => _employees = value ?? _employees),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            initialValue: _salary.toStringAsFixed(0),
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Salario promedio mensual (MXN)'),
+            onChanged: (value) => _salary = double.tryParse(value) ?? _salary,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            initialValue: _leavers.toStringAsFixed(0),
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Bajas anuales'),
+            onChanged: (value) => _leavers = double.tryParse(value) ?? _leavers,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            initialValue: _rotationReduction.toStringAsFixed(0),
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Reducción de rotación (%)'),
+            onChanged: (value) => _rotationReduction = double.tryParse(value) ?? _rotationReduction,
+          ),
+          const SizedBox(height: 12),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Tengo costo de intervención'),
+            value: _hasInterventionCost,
+            onChanged: (value) => setState(() => _hasInterventionCost = value),
+          ),
+          if (_hasInterventionCost)
+            TextFormField(
+              initialValue: _costIntervention.toStringAsFixed(0),
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Costo de intervención (MXN)'),
+              onChanged: (value) => _costIntervention = double.tryParse(value) ?? _costIntervention,
+            ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: _loading ? null : _calculate,
+            icon: const Icon(Icons.calculate),
+            label: Text(_loading ? 'Calculando...' : 'Calcular escenario'),
+          ),
+          if (_loading) const Padding(padding: EdgeInsets.only(top: 16), child: LinearProgressIndicator()),
+          if (_error != null) ...[
+            const SizedBox(height: 16),
+            _Notice(child: _error!),
+            OutlinedButton(onPressed: _calculate, child: const Text('Reintentar')),
+          ],
+          if (_result != null) ...[
+            const SizedBox(height: 16),
+            _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Ahorro bruto B2B', style: TextStyle(fontWeight: FontWeight.w800)),
+              Text('${(_result!['b2b']['ahorro_bruto'] as num).toStringAsFixed(2)} MXN'),
+              const SizedBox(height: 8),
+              Text(
+                _result!['b2b']['beneficio_neto'] == null
+                    ? 'Beneficio neto: no calculable sin costo de intervención'
+                    : 'Beneficio neto: ${(_result!['b2b']['beneficio_neto'] as num).toStringAsFixed(2)} MXN',
+              ),
+            ])),
+            const SizedBox(height: 12),
+            _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Flujos públicos B2G', style: TextStyle(fontWeight: FontWeight.w800)),
+              Text('ISN — impuesto: ${(_result!['b2g']['isn_impuesto'] as num).toStringAsFixed(2)} MXN'),
+              Text('IMSS — aportación: ${(_result!['b2g']['imss_patronal'] as num).toStringAsFixed(2)} MXN'),
+              Text('INFONAVIT — aportación: ${(_result!['b2g']['infonavit_aportacion'] as num).toStringAsFixed(2)} MXN'),
+            ])),
+          ],
+        ]),
+      );
 }
 
 class ProjectScreen extends StatelessWidget {
@@ -657,15 +1240,15 @@ class ProjectScreen extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) => const [
                 _InfoCard(title: 'Para qué sirve', text: 'Convertir datos de cuidado en evidencia para decisiones y explorar la vinculación con centros comunitarios.'),
-                _InfoCard(title: 'Qué puedes hacer', text: 'Consultar indicadores de las 16 alcaldías, comparar zonas y recorrer una búsqueda sintética.'),
-                _InfoCard(title: 'Qué sigue siendo demostrativo', text: 'Las ofertas y resultados no representan plazas ni centros verificados.'),
+                _InfoCard(title: 'Qué puedes hacer', text: 'Consultar indicadores, comparar zonas, ejecutar matching sintético y calcular escenarios B2B/B2G.'),
+                _InfoCard(title: 'Qué sigue siendo demostrativo', text: 'Las ofertas y escenarios no representan plazas, centros verificados ni impacto observado.'),
               ][index],
             );
           }),
           const SizedBox(height: 20),
           const Text('Fuentes y metodología', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _ink)),
           const SizedBox(height: 8),
-          const _Card(child: Text('Se conservan fuentes tabulares y cartográficas del repositorio. ENUT describe CDMX; la distribución proporcional por alcaldía es exploratoria. Flutter no está conectado al matching Python ni a simuladores; la búsqueda es únicamente un recorrido sintético.', style: TextStyle(color: _muted, height: 1.45))),
+          const _Card(child: Text('Se conservan fuentes tabulares y cartográficas del repositorio. ENUT describe CDMX; la distribución proporcional por alcaldía es exploratoria. Flutter usa una API mínima para matching y simuladores; si el backend no está disponible, conserva la consulta territorial local.', style: TextStyle(color: _muted, height: 1.45))),
           const SizedBox(height: 16),
           const Text('Limitaciones esenciales', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _ink)),
           const SizedBox(height: 8),

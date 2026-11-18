@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  http: ^1.2.2
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -58,6 +59,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/alcaldias.json
+    - assets/data/alcaldias.geojson
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -32,3 +32,16 @@ def test_iztapalapa_matches_streamlit_source():
     assert iztapalapa["poblacion_total"] == 1835486
     assert iztapalapa["poblacion_0_4"] == 103148
     assert iztapalapa["poblacion_60_mas"] == 262064
+
+
+def test_flutter_geometry_keys_match_indicators():
+    indicators = json.loads(OUTPUT.read_text(encoding="utf-8"))
+    geometry_path = ROOT / "cliente_flutter" / "assets" / "data" / "alcaldias.geojson"
+    geometry = json.loads(geometry_path.read_text(encoding="utf-8"))
+    indicator_keys = {row["clave_alcaldia"] for row in indicators}
+    geometry_keys = {
+        feature["properties"]["clave"]
+        for feature in geometry["features"]
+    }
+    assert len(geometry["features"]) == 16
+    assert geometry_keys == indicator_keys

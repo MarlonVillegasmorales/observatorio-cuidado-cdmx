@@ -4,6 +4,11 @@ import pandas as pd
 import streamlit as st
 from cuidado.services.simulacion import ejecutar_busqueda
 from cuidado.services.integraciones import INTEGRACIONES
+from cuidado.services.simulador_b2b_b2g import (
+    cargar_escenarios,
+    simular_b2b,
+    simular_b2g,
+)
 from cuidado.ui.estilos import aplicar_estilos
 
 @st.cache_data(show_spinner='Cargando datos preparados...')
@@ -17,6 +22,7 @@ TAREAS = {
     "Mapa": "Selecciona una alcaldía para consultar sus datos preparados.",
     "Comparar": "Ranking para identificar diferencias territoriales.",
     "Búsqueda demo": "Demostración sintética, sin plazas reales.",
+    "Simuladores": "Escenarios B2B/B2G sintéticos y no de impacto observado.",
     "Proyecto": "Fuentes, límites y estado académico.",
 }
 
@@ -25,6 +31,7 @@ ICONOS_TAREAS = {
     "Mapa": "⌖",
     "Comparar": "≋",
     "Búsqueda demo": "⌕",
+    "Simuladores": "↗",
     "Proyecto": "i",
 }
 CLAVES_NAVEGACION = {
@@ -32,6 +39,7 @@ CLAVES_NAVEGACION = {
     "Mapa": "mapa",
     "Comparar": "comparar",
     "Búsqueda demo": "busqueda",
+    "Simuladores": "simuladores",
     "Proyecto": "proyecto",
 }
 
@@ -163,7 +171,7 @@ def _render_inicio() -> None:
     accesos = [
         ("Explorar mapa", "Mapa", "mapa", "Consulta una alcaldía y sus datos demográficos."),
         ("Comparar alcaldías", "Comparar", "comparar", "Ordena indicadores demográficos autorizados."),
-        ("Probar búsqueda", "Búsqueda demo", "busqueda", "Recorre un ejemplo de compatibilidad sintética."),
+        ("Probar búsqueda", "Búsqueda demo", "busqueda", "Calcula una recomendación sintética con el matching Python."),
     ]
     columnas = st.columns(3)
     for columna, (etiqueta, destino, clave, descripcion) in zip(columnas, accesos):
@@ -214,14 +222,89 @@ def _render_navegacion(pagina: str) -> None:
                         st.rerun()
 
 
+def _render_simuladores() -> None:
+    st.markdown('<div class="section-kicker">Escenarios sintéticos</div>', unsafe_allow_html=True)
+    st.header("Simuladores B2B y B2G")
+    st.info(
+        "Resultados demostrativos. No estiman impacto observado ni beneficio neto "
+        "cuando falta el costo de intervención."
+    )
+    try:
+        escenarios = cargar_escenarios()
+    except (FileNotFoundError, ValueError) as exc:
+        st.error(f"No se pudieron cargar los escenarios: {exc}")
+        return
+
+    ids = escenarios["escenario_id"].tolist()
+    seleccionado = st.selectbox("Escenario", ids, key="simulador_escenario")
+    row = escenarios.loc[escenarios["escenario_id"] == seleccionado].iloc[0].to_dict()
+
+    col1, col2 = st.columns(2)
+    with col1:
+        row["numero_empleadas"] = st.number_input(
+            "Número de empleadas", min_value=1.0, value=float(row["numero_empleadas"]), step=1.0
+        )
+        row["salario_promedio"] = st.number_input(
+            "Salario promedio mensual", min_value=0.01, value=float(row["salario_promedio"]), step=100.0
+        )
+        row["bajas_anuales"] = st.number_input(
+            "Bajas anuales", min_value=0.0, value=float(row["bajas_anuales"]), step=1.0
+        )
+        row["reduccion_rotacion_pct"] = st.number_input(
+            "Reducción de rotación (%)", min_value=0.0, max_value=100.0,
+            value=float(row["reduccion_rotacion_pct"]), step=1.0
+        )
+    with col2:
+        row["dias_cotizados"] = st.number_input(
+            "Días cotizados", min_value=1.0, max_value=366.0,
+            value=float(row["dias_cotizados"]), step=1.0
+        )
+        row["factor_integracion_sbc"] = st.number_input(
+            "Factor de integración SBC", min_value=0.01,
+            value=float(row["factor_integracion_sbc"]), step=0.01
+        )
+        row["tasa_imss_patronal"] = st.number_input(
+            "Tasa IMSS patronal", min_value=0.0, max_value=1.0,
+            value=float(row["tasa_imss_patronal"]), step=0.01
+        )
+        row["tasa_isn_cdmx"] = st.number_input(
+            "Tasa ISN CDMX", min_value=0.0, max_value=1.0,
+            value=float(row["tasa_isn_cdmx"]), step=0.01
+        )
+        row["tasa_infonavit"] = st.number_input(
+            "Tasa INFONAVIT", min_value=0.0, max_value=1.0,
+            value=float(row["tasa_infonavit"]), step=0.01
+        )
+
+    if st.button("Calcular escenario", type="primary", key="calcular_simulador"):
+        try:
+            b2b = simular_b2b(row)
+            b2g = simular_b2g(row)
+        except ValueError as exc:
+            st.error(str(exc))
+            return
+        st.subheader("Ahorro y beneficio B2B")
+        st.metric("Ahorro bruto", f"${b2b['ahorro_bruto']:,.2f} MXN")
+        st.metric(
+            "Beneficio neto",
+            "No calculable"
+            if b2b["beneficio_neto"] is None
+            else f"${b2b['beneficio_neto']:,.2f} MXN",
+        )
+        st.subheader("Flujos públicos B2G")
+        st.metric("ISN — impuesto", f"${b2g['isn_impuesto']:,.2f} MXN")
+        st.metric("IMSS — aportación", f"${b2g['imss_patronal']:,.2f} MXN")
+        st.metric("INFONAVIT — aportación", f"${b2g['infonavit_aportacion']:,.2f} MXN")
+
+
 def _render_proyecto():
     st.markdown('<div class="section-kicker">Sobre este proyecto</div>', unsafe_allow_html=True)
     st.header("Información del proyecto")
     st.caption("Una lectura breve del propósito, alcance y límites del observatorio.")
     bloques = [
         ("Para qué sirve", "Convertir datos de cuidado en evidencia para decisiones y explorar la vinculación con centros comunitarios."),
-        ("Qué puedes hacer", "Consultar indicadores de las 16 alcaldías, comparar zonas y recorrer una búsqueda sintética."),
-        ("Qué sigue siendo demostrativo", "Las ofertas, solicitudes y resultados de búsqueda son sintéticos; no representan plazas ni centros verificados."),
+        ("Qué puedes hacer", "Consultar indicadores de las 16 alcaldías, comparar zonas, ejecutar matching sintético y calcular escenarios B2B/B2G."),
+        ("Qué sigue siendo demostrativo", "Las ofertas, solicitudes y escenarios son sintéticos; no representan plazas ni impacto observado."),
     ]
     columnas = st.columns(3)
     for columna, (titulo, texto) in zip(columnas, bloques):
@@ -240,9 +323,9 @@ def _render_proyecto():
         "la estimación territorial no mide abandono laboral ni causalidad. La aplicación no recoge datos personales."
     )
     st.subheader("Estado académico")
-    st.caption("Las entregas internas se muestran como documentación secundaria y no como módulos disponibles.")
+    st.caption("Las entregas internas se muestran con su alcance real de integración.")
     st.dataframe(pd.DataFrame(INTEGRACIONES), hide_index=True, use_container_width=True)
-    st.info("Los módulos se incorporarán tras validar sus contratos de entrada y salida. No se muestran ahorros ni recaudaciones inventadas.")
+    st.info("El matching usa el motor Python canónico. Los simuladores muestran resultados sintéticos y beneficio neto sólo con costo conocido.")
 
 def main():
     st.set_page_config(
@@ -273,5 +356,7 @@ def main():
         mostrar_comparativo_alcaldias()
     elif pagina=="Búsqueda demo":
         _render_busqueda()
+    elif pagina == "Simuladores":
+        _render_simuladores()
     else:
         _render_proyecto()

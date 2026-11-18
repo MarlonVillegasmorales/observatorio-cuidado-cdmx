@@ -11,6 +11,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "data" / "processed" / "mapa_alcaldias" / "indicadores_alcaldia.parquet"
 OUTPUT = ROOT / "cliente_flutter" / "assets" / "data" / "alcaldias.json"
+GEO_SOURCE = ROOT / "data" / "processed" / "mapa_alcaldias" / "alcaldias.geojson"
+GEO_OUTPUT = ROOT / "cliente_flutter" / "assets" / "data" / "alcaldias.geojson"
 
 OFFICIAL_NAMES = {
     "09 002": "Azcapotzalco",
@@ -94,6 +96,22 @@ def main() -> None:
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    if not GEO_SOURCE.is_file():
+        raise FileNotFoundError(f"No existe la cartografía preparada: {GEO_SOURCE}")
+    geo = json.loads(GEO_SOURCE.read_text(encoding="utf-8"))
+    features = geo.get("features")
+    if not isinstance(features, list) or len(features) != 16:
+        raise ValueError("La cartografía debe contener exactamente 16 geometrías")
+    keys = {feature.get("properties", {}).get("clave") for feature in features}
+    data_keys = {item["clave_alcaldia"] for item in result}
+    if keys != data_keys:
+        raise ValueError("Las claves de cartografía e indicadores no coinciden")
+    GEO_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    GEO_OUTPUT.write_text(
+        json.dumps(geo, ensure_ascii=False, separators=(",", ":")) + "\n",
         encoding="utf-8",
         newline="\n",
     )

@@ -100,6 +100,13 @@ El generador valida las 16 claves oficiales, nombres con acentos, periodos,
 unidades, duplicados y valores faltantes; no reemplaza faltantes por cero ni
 suma silenciosamente grupos incompletos.
 
+Las tarjetas de Inicio navegan a las mismas secciones que la barra inferior.
+El mapa territorial consume `cliente_flutter/assets/data/alcaldias.geojson`,
+derivado de las geometrías oficiales preparadas en
+`data/processed/mapa_alcaldias/alcaldias.geojson`. Se dibuja localmente sin
+teselas externas y permite seleccionar por polígono o lista. Si falla la
+cartografía, la consulta por lista conserva los 16 indicadores.
+
 La comparación usa proporciones observadas derivadas del Censo 2020 para 0–14
 y 60 años o más. La búsqueda conserva filtros, permite retroceder y
 restablecer, y muestra explícitamente que su resultado es un ejemplo fijo
@@ -119,6 +126,17 @@ Firebase Hosting tiene configuración local en `firebase.json`. Usa
 `index.html`, evita caché persistente de `index.html` y excluye mapas de código
 fuente. No hay `.firebaserc` ni ID de proyecto configurado: seleccionar proyecto
 Firebase es un paso manual pendiente. No se ha ejecutado `firebase deploy`.
+
+## Matriz funcional
+
+| Función | Streamlit | Flutter | Dependencia | Estado |
+|---|---|---|---|---|
+| Consulta territorial 16 alcaldías | Implementada | Implementada con JSON local | Datos preparados | Verificada localmente |
+| Mapa y selección por lista | Implementada en Streamlit | Geometrías GeoJSON locales con selección | Recurso GeoJSON | Verificada por pruebas |
+| Comparación | Implementada | Implementada con Censo 2020 | Datos preparados | Verificada localmente |
+| Matching sintético | Servicio Python canónico | API Python canónica | Backend HTTP público | Localmente conectado; publicación bloqueada |
+| Simuladores B2B/B2G | Servicio Python canónico y interfaz nueva | API Python canónica | Backend HTTP público | Localmente conectado; publicación bloqueada |
+| Información y créditos | Implementada | Implementada | Documentación local | Verificada |
 
 Preparación reproducible:
 
