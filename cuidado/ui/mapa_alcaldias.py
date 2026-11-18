@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_folium import st_folium
 
-from cuidado.ui.directorio_infantil import ARCHIVO, agregar_puntos, cargar_directorio, mostrar_directorio
+from cuidado.ui.directorio_infantil import ARCHIVO, agregar_puntos, cargar_directorio, mostrar_directorio, mostrar_horario
 from cuidado.services.mapa_alcaldias import (
     cargar_indicadores_alcaldias,
     cargar_mapa_alcaldias,
@@ -183,11 +183,7 @@ def mostrar_mapa_alcaldias() -> None:
 
     st.markdown('<div class="section-kicker">Explorador territorial</div>', unsafe_allow_html=True)
     st.header("Explora tu alcaldía")
-    st.write("Selecciona una alcaldía para consultar sus datos.")
-    st.warning(
-        "La población corresponde al Censo 2020 de INEGI (ITER), agregada por alcaldía. "
-        "Los grupos etarios describen población registrada y no equivalen a necesidad de cuidado."
-    )
+    st.write("Elige una alcaldía para ver sus centros y horarios publicados. Cada punto representa una sede con coordenadas.")
     claves = claves_alcaldias(geometria)
     if "mapa_alcaldia_pending" in st.session_state:
         st.session_state["mapa_alcaldia_selector"] = st.session_state.pop("mapa_alcaldia_pending")
@@ -266,13 +262,13 @@ def mostrar_mapa_alcaldias() -> None:
         with columna:
             _tarjeta_indicador(titulo, fila, nota)
 
-    st.subheader("Población por grupos de edad")
-    st.caption(
-        "Los grupos son mutuamente excluyentes según la fuente. Edad no "
-        "especificada se conserva sin redistribuir. Fuente: INEGI, Censo 2020."
-    )
     indicadores_autorizados = indicadores_publicos(indicadores, catalogo)
-    _grafico_edades(indicadores_autorizados, seleccion)
+    with st.expander("Población por grupos de edad"):
+        st.caption(
+            "Los grupos son mutuamente excluyentes según la fuente. Edad no "
+            "especificada se conserva sin redistribuir. Fuente: INEGI, Censo 2020."
+        )
+        _grafico_edades(indicadores_autorizados, seleccion)
     with st.expander("Ver todos los datos", expanded=False):
         st.dataframe(
             indicadores_de_alcaldia(indicadores_autorizados, seleccion)[
@@ -322,7 +318,7 @@ def mostrar_comparativo_alcaldias() -> None:
     st.markdown('<div class="section-kicker">Comparación territorial</div>', unsafe_allow_html=True)
     st.header("Compara dos alcaldías")
     st.write(
-        "Explora cómo cambian la composición de la población entre dos zonas."
+        "Compara los centros con horario publicado y la población por edad."
     )
     mapa_seleccion = st.session_state.get("mapa_alcaldia_selector", "")
     if "comparativo_seleccion_a" not in st.session_state:
@@ -357,6 +353,19 @@ def mostrar_comparativo_alcaldias() -> None:
         format_func=lambda clave: nombres[clave],
     )
     st.session_state["comparativo_seleccion_b"] = alcaldia_b
+
+    try:
+        directorio = cargar_directorio(ARCHIVO.stat().st_mtime_ns)
+    except (OSError, ValueError):
+        directorio = {}
+    par = [directorio.get(clave.replace(" ", "")) for clave in (alcaldia_a, alcaldia_b)]
+    st.subheader("Centros con horario publicado")
+    if all(grupo and grupo["resumen"]["sedes_unicas"] for grupo in par):
+        for columna, grupo in zip(st.columns(2), par):
+            with columna:
+                mostrar_horario(grupo["resumen"], grupo["nombre"])
+    else:
+        st.caption("Falta información del directorio para comparar este par.")
 
     comparacion = comparacion_composicion(autorizados, alcaldia_a, alcaldia_b)
     if comparacion.empty or comparacion["a"].isna().all():

@@ -12,6 +12,27 @@ Future<Map<String, Registro>> cargarOfertaInfantil() async {
   return (jsonDecode(raw) as Registro).cast<String, Registro>();
 }
 
+class ResumenHorario extends StatelessWidget {
+  const ResumenHorario({super.key, required this.nombre, required this.sedes, required this.horario});
+  final String nombre;
+  final int sedes;
+  final int horario;
+
+  @override
+  Widget build(BuildContext context) {
+    final proporcion = sedes > 0 ? horario / sedes : null;
+    final porcentaje = proporcion == null ? 'Sin dato' : '${(100 * proporcion).round()} %';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('$nombre · $porcentaje', style: Theme.of(context).textTheme.titleLarge),
+        if (proporcion != null) LinearProgressIndicator(value: proporcion),
+        Text('$horario de $sedes sedes documentadas tienen horario publicado.'),
+      ]),
+    );
+  }
+}
+
 class OfertaInfantil extends StatelessWidget {
   const OfertaInfantil({
     super.key,
@@ -44,9 +65,7 @@ class OfertaInfantil extends StatelessWidget {
               'Oferta infantil documentada',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            Text(
-              "De ${total('sedes_unicas')} centros documentados, ${total('con_horario')} tienen un horario publicado.",
-            ),
+            ResumenHorario(nombre: alcaldia ?? 'Toda la CDMX', sedes: total('sedes_unicas'), horario: total('con_horario')),
             Text(
               "${sedes.where((s) => s.containsKey('punto')).length} sedes con coordenadas. Los datos corresponden al periodo de cada fuente.",
             ),
@@ -65,10 +84,10 @@ class OfertaInfantil extends StatelessWidget {
             ),
             if (alcaldia == null)
               const ExpansionTile(
-                title: Text('¿Cuántas personas cuidan en México?'),
+                title: Text('México · 2022 | Personas y horas de cuidado'),
                 children: [
                   Text(
-                    'En México, 31.7 millones de personas de 15 años o más cuidaron a alguien de su hogar o de otro hogar en 2022. Entre quienes eran cuidadores principales, las mujeres dedicaron en promedio 39 horas por semana y los hombres, 31.',
+                    'En México, 31.7 millones de personas de 15 años o más cuidaron a alguien de su hogar o de otro hogar en 2022. El 75.1 % de quienes brindaron cuidados eran mujeres. Entre las personas cuidadoras principales, las mujeres dedicaron en promedio 38.9 horas semanales y los hombres, 30.6.',
                   ),
                   SelectableText(
                     'INEGI · ENASIC 2022 · resultados nacionales\nhttps://www.inegi.org.mx/programas/enasic/2022/',

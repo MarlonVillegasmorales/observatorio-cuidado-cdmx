@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
-const _brand = Color(0xFF6D28D9);
+const _brand = Color(0xFF7036C4);
 const _brandDark = Color(0xFF4C1D95);
 const _brandSoft = Color(0xFFEDE9FE);
-const _page = Color(0xFFF8FAFC);
-const _ink = Color(0xFF172033);
+const _page = Color(0xFFF6F3FC);
+const _ink = Color(0xFF19152F);
 const _muted = Color(0xFF475569);
-const _border = Color(0xFFCBD5E1);
+const _border = Color(0xFFD9D3E6);
 
 class AlcaldiaData {
   const AlcaldiaData({
@@ -292,9 +292,9 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Consulta datos territoriales, compara alcaldías y recorre una búsqueda demostrativa sin llenar formularios operativos.', style: TextStyle(color: _muted, height: 1.5)),
+            const Text('Explora los centros de cuidado infantil documentados en las 16 alcaldías. Consulta sus horarios publicados y compara la información disponible.', style: TextStyle(color: _muted, height: 1.5)),
             const SizedBox(height: 16),
-            const _Notice(child: 'Demostración académica: las cifras y resultados sintéticos no confirman plazas ni efectos laborales.'),
+            Center(child: Image.asset('assets/portada.webp', width: 480, height: 140, fit: BoxFit.contain, excludeFromSemantics: true)),
             const SizedBox(height: 24),
             Text('¿Qué quieres explorar?', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, color: _ink)),
             const SizedBox(height: 12),
@@ -311,8 +311,8 @@ class HomeScreen extends StatelessWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemBuilder: (context, index) => [
-                  _ActionCard(icon: Icons.map_outlined, title: 'Explorar mapa', description: 'Consulta una alcaldía y sus datos demográficos.', onTap: () => onNavigate(1)),
-                  _ActionCard(icon: Icons.compare_arrows, title: 'Comparar alcaldías', description: 'Compara indicadores demográficos observados.', onTap: () => onNavigate(2)),
+                  _ActionCard(icon: Icons.map_outlined, title: 'Explorar mapa', description: 'Localiza centros y consulta sus horarios.', onTap: () => onNavigate(1)),
+                  _ActionCard(icon: Icons.compare_arrows, title: 'Comparar alcaldías', description: 'Compara sedes con horario publicado y grupos de edad.', onTap: () => onNavigate(2)),
                   _ActionCard(icon: Icons.search, title: 'Probar búsqueda', description: 'Recorre un ejemplo demostrativo de búsqueda.', onTap: () => onNavigate(3)),
                   _ActionCard(icon: Icons.calculate_outlined, title: 'Simuladores', description: 'Calcula escenarios B2B/B2G sintéticos.', onTap: () => onNavigate(4)),
                 ][index],
@@ -421,9 +421,8 @@ class _MapScreenState extends State<MapScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Selecciona una alcaldía para consultar sus datos preparados.', style: TextStyle(color: _muted)),
+            const Text('Elige una alcaldía para ver sus centros y horarios publicados.', style: TextStyle(color: _muted)),
             const SizedBox(height: 14),
-            const _Notice(child: 'La población corresponde al Censo 2020 de INEGI (ITER), agregada por alcaldía. Los grupos etarios describen población registrada y no equivalen a necesidad de cuidado.'),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: _selected,
@@ -495,7 +494,7 @@ class _MapScreenState extends State<MapScreen> {
                 _Metric(title: '60 años o más', value: '${selectedData.olderAdults}', note: 'Suma de grupos'),
               ]),
               const SizedBox(height: 16),
-              _Card(child: _AgeBars(data: selectedData)),
+              ExpansionTile(title: const Text('Población por grupos de edad'), children: [_AgeBars(data: selectedData)]),
               const SizedBox(height: 12),
               const _Card(child: Text('Los conteos describen población registrada y no prueban necesidad de cuidado, demanda efectiva ni impacto social.', style: TextStyle(color: _muted, height: 1.4))),
             ],
@@ -806,6 +805,7 @@ class CompareScreen extends StatefulWidget {
 }
 
 class _CompareScreenState extends State<CompareScreen> {
+  late final _oferta = cargarOfertaInfantil();
   String _a = 'Iztapalapa';
   String _b = 'Benito Juárez';
   late final Future<List<AlcaldiaData>> _dataFuture =
@@ -833,32 +833,50 @@ class _CompareScreenState extends State<CompareScreen> {
         },
       );
 
-  double _ratio(List<AlcaldiaData> data, String name, String group) {
+  double? _ratio(List<AlcaldiaData> data, String name, String group) {
     for (final item in data) {
       if (item.name == name) {
-        if (item.total == 0) return 0;
+        if (item.total == 0) return null;
         final value = group == '60+' ? item.olderAdults : item.children14;
         return value / item.total;
       }
     }
-    return 0;
+    return null;
   }
 
   Widget _render(BuildContext context, List<AlcaldiaData> data) => _Page(
         kicker: 'Comparación territorial',
         title: 'Compara dos alcaldías',
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Explora cómo cambia la composición de la población entre dos zonas.', style: TextStyle(color: _muted)),
+          const Text('Compara los centros con horario publicado y la población por edad.', style: TextStyle(color: _muted)),
           const SizedBox(height: 16),
           LayoutBuilder(builder: (context, constraints) {
             final vertical = constraints.maxWidth < 560;
             final fields = [
-              DropdownButtonFormField<String>(initialValue: _a, isExpanded: true, isDense: true, decoration: const InputDecoration(labelText: 'Alcaldía A', isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)), items: _alcaldias.map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (x) { if (x != null) setState(() => _a = x); }),
+              DropdownButtonFormField<String>(initialValue: _a, isExpanded: true, isDense: true, decoration: const InputDecoration(labelText: 'Alcaldía A', isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)), items: _alcaldias.map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (x) { if (x != null) setState(() { if (_b == x) _b = _a; _a = x; }); }),
               DropdownButtonFormField<String>(initialValue: _b, isExpanded: true, isDense: true, decoration: const InputDecoration(labelText: 'Alcaldía B', isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)), items: _alcaldias.where((x) => x != _a).map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (x) { if (x != null) setState(() => _b = x); }),
             ];
             return vertical ? Column(children: [fields[0], const SizedBox(height: 12), fields[1]]) : Row(children: [Expanded(child: fields[0]), const SizedBox(width: 12), Expanded(child: fields[1])]);
           }),
           const SizedBox(height: 20),
+          FutureBuilder<Map<String, Registro>>(
+            future: _oferta,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) return const Text('Directorio infantil no disponible.');
+              if (!snapshot.hasData) return const Text('Cargando directorio infantil.');
+              final grupos = {for (final g in snapshot.data!.values) g['nombre']: g['resumen']};
+              final par = [_a, _b];
+              if (par.any((nombre) => (grupos[nombre]?['sedes_unicas'] ?? 0) == 0)) {
+                return const Text('Falta información del directorio para comparar este par.');
+              }
+              return _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Centros con horario publicado', style: Theme.of(context).textTheme.titleMedium),
+                for (final nombre in par)
+                  ResumenHorario(nombre: nombre, sedes: grupos[nombre]['sedes_unicas'], horario: grupos[nombre]['con_horario']),
+              ]));
+            },
+          ),
+          const SizedBox(height: 12),
           _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Composición demográfica', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: _ink)),
             const SizedBox(height: 4),
@@ -877,16 +895,19 @@ class _ComparisonRow extends StatelessWidget {
   const _ComparisonRow({required this.label, required this.first, required this.firstValue, required this.second, required this.secondValue});
   final String label;
   final String first;
-  final double firstValue;
+  final double? firstValue;
   final String second;
-  final double secondValue;
+  final double? secondValue;
 
   @override
   Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: 16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.w700, color: _ink)),
         const SizedBox(height: 8),
-        _BarLabel(name: first, value: firstValue),
-        _BarLabel(name: second, value: secondValue, color: const Color(0xFFA78BFA)),
+        if (firstValue != null && secondValue != null) ...[
+          _BarLabel(name: first, value: firstValue!),
+          _BarLabel(name: second, value: secondValue!, color: const Color(0xFFA78BFA)),
+        ] else
+          const Text('Sin datos comparables para este par.'),
       ]));
 }
 

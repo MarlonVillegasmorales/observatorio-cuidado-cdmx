@@ -6,14 +6,14 @@ def aplicar_estilos() -> None:
         """
         <style>
         :root {
-            --page: #F8FAFC;
+            --page: #F6F3FC;
             --surface: #FFFFFF;
-            --ink: #172033;
+            --ink: #19152F;
             --muted: #475569;
-            --brand: #6D28D9;
+            --brand: #7036C4;
             --brand-dark: #4C1D95;
             --brand-soft: #EDE9FE;
-            --border: #CBD5E1;
+            --border: #D9D3E6;
             --focus: #B45309;
         }
         #MainMenu, footer { visibility: hidden; }
@@ -134,7 +134,7 @@ def aplicar_estilos() -> None:
             min-height: 132px;
         }
         .territorial-kpi-label { color: #475569; font-size: .95rem; font-weight: 650; }
-        .territorial-kpi-value { color: #172033; font-size: 1.45rem; font-weight: 750; margin-top: .55rem; }
+        .territorial-kpi-value { color: #19152F; font-size: 1.45rem; font-weight: 750; margin-top: .55rem; }
         .territorial-kpi-meta, .territorial-kpi-note { color: #475569; font-size: .8rem; margin-top: .4rem; }
         .info-card {
             height: auto;

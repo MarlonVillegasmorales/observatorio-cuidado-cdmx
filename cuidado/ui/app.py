@@ -1,4 +1,5 @@
 """Composición de pantallas; sin ETL ni escrituras a la base operativa."""
+from pathlib import Path
 from datetime import time
 import pandas as pd
 import streamlit as st
@@ -162,15 +163,12 @@ def _ir_a(seccion: str) -> None:
 def _render_inicio() -> None:
     st.markdown('<div class="section-kicker">Observatorio del cuidado</div>', unsafe_allow_html=True)
     st.header("Economía del cuidado en CDMX")
-    st.markdown(
-        "Consulta datos territoriales, compara alcaldías y recorre una búsqueda "
-        "demostrativa sin llenar formularios operativos."
-    )
-    st.info("Demostración académica: las cifras y resultados sintéticos no confirman plazas ni efectos laborales.")
+    st.write("Explora los centros de cuidado infantil documentados en las 16 alcaldías. Consulta sus horarios publicados y compara la información disponible.")
+    st.image(str(Path(__file__).resolve().parents[2] / "cliente_flutter/assets/portada.webp"), width=640)
     st.subheader("¿Qué quieres explorar?")
     accesos = [
-        ("Explorar mapa", "Mapa", "mapa", "Consulta una alcaldía y sus datos demográficos."),
-        ("Comparar alcaldías", "Comparar", "comparar", "Ordena indicadores demográficos autorizados."),
+        ("Explorar mapa", "Mapa", "mapa", "Localiza centros y consulta sus horarios."),
+        ("Comparar alcaldías", "Comparar", "comparar", "Compara sedes con horario publicado y grupos de edad."),
         ("Probar búsqueda", "Búsqueda demo", "busqueda", "Calcula una recomendación sintética con el matching Python."),
     ]
     columnas = st.columns(3)

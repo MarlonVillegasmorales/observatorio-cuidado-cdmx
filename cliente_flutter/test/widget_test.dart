@@ -19,18 +19,21 @@ void main() {
     await tester.pumpWidget(const ObservatorioApp());
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Explorar mapa').first);
     await tester.tap(find.text('Explorar mapa').first);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('nav_mapa')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_inicio')));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Comparar alcaldías').first);
     await tester.tap(find.text('Comparar alcaldías').first);
     await tester.pumpAndSettle();
     expect(find.text('Compara dos alcaldías'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_inicio')));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Probar búsqueda').first);
     await tester.tap(find.text('Probar búsqueda').first);
     await tester.pumpAndSettle();
     expect(find.text('Paso 1 de 4 · Servicio'), findsOneWidget);
