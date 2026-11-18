@@ -172,18 +172,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Paso 1 de 4 · Servicio'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Continuar'));
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
     expect(find.text('Paso 2 de 4 · Horario'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Atrás'));
     await tester.tap(find.text('Atrás'));
     await tester.pumpAndSettle();
     expect(find.text('Paso 1 de 4 · Servicio'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Continuar'));
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Continuar'));
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Ver resultados'));
     await tester.tap(find.text('Ver resultados'));
     await tester.pumpAndSettle();
     expect(find.text('Recomendación sintética'), findsOneWidget);

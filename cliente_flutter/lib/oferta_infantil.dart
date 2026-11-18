@@ -57,6 +57,7 @@ class OfertaInfantil extends StatelessWidget {
       }
     }
     return Card(
+      color: const Color(0xFFE1F4EF),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -64,7 +65,7 @@ class OfertaInfantil extends StatelessWidget {
           children: [
             Text(
               'Oferta infantil documentada',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             Wrap(
               spacing: 8,

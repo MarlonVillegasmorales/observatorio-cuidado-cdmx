@@ -233,6 +233,35 @@ def aplicar_estilos() -> None:
             border-radius: 1rem;
             overflow: hidden;
         }
+        .app-header, .section-kicker {
+            background: #eae0fa; border-radius: 0.9rem; padding: 0.75rem 1rem;
+        }
+        [data-testid="stHeading"] {
+            background: #ede4fa; border-inline-start: 5px solid var(--brand);
+            border-radius: 0.9rem; padding: 0.5rem 1rem;
+        }
+        [data-testid="stHeading"]:has(h1), [data-testid="stHeading"]:has(h2) {
+            background: linear-gradient(105deg, #4c1d95, #7036c4);
+            border: 0; padding: 0.85rem 1.1rem;
+        }
+        [data-testid="stAppViewContainer"] [data-testid="stHeading"] :is(h1,h2) {
+            color: white; margin: 0; padding: 0; font-weight: 800;
+        }
+        [data-testid="stHeading"] h3 { margin: 0; padding: 0; }
+        .stMarkdown [data-testid="stMarkdownContainer"]:has(> :is(p,ul,ol)),
+        .stCaptionContainer {
+            background: #e8f1fa; border-radius: 0.85rem; padding: 0.65rem 1rem;
+            overflow-wrap: anywhere;
+        }
+        .stMarkdown [data-testid="stMarkdownContainer"] > :last-child,
+        .stCaptionContainer p { margin-bottom: 0; }
+        [data-testid="stExpander"] details, .section-card, .info-card, .source-strip {
+            background: #f0e8fc; border-radius: 1rem;
+        }
+        [data-testid="stMetric"], .territorial-kpi { background: #e1f4ef; }
+        .action-card { background: #e1f4ef; }
+        [data-testid="stColumn"]:nth-child(2) .action-card { background: #f0e8fc; }
+        [data-testid="stColumn"]:nth-child(3) .action-card { background: #ffead9; }
         @media (max-width: 768px) {
             [data-testid="stImage"], [data-testid="stImage"] img { max-width: 100%; height: auto; }
             .block-container { padding: 1rem 0.8rem 2.5rem; }
