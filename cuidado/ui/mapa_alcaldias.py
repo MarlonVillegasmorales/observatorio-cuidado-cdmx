@@ -472,7 +472,8 @@ def mostrar_comparativo_alcaldias() -> None:
         )
         st.write(
             "Las diferencias describen composición registrada y no indican necesidad "
-            "de cuidado, calidad de servicios ni impacto social. No se muestran "
-            "servicios ni acceso territorial porque el directorio disponible no "
-            "cumple una cobertura y definición comparables verificadas."
+            "de cuidado, calidad de servicios ni impacto social. El porcentaje de "
+            "sedes con horario publicado mide qué tan completos están los registros "
+            "del directorio en cada alcaldía. La disponibilidad de lugares se consulta "
+            "por sede cuando la fuente publica vacantes con fecha."
         )
