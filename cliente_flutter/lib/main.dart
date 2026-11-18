@@ -363,7 +363,8 @@ class _ActionCard extends StatelessWidget {
 const _alcaldias = ['Álvaro Obregón', 'Azcapotzalco', 'Benito Juárez', 'Coyoacán', 'Cuajimalpa de Morelos', 'Cuauhtémoc', 'Gustavo A. Madero', 'Iztacalco', 'Iztapalapa', 'La Magdalena Contreras', 'Miguel Hidalgo', 'Milpa Alta', 'Tláhuac', 'Tlalpan', 'Venustiano Carranza', 'Xochimilco'];
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key, this.dataFuture, this.geometryFuture});
+  const MapScreen({super.key, this.dataFuture, this.geometryFuture, this.ofertaFuture});
+  final Future<Map<String, Registro>>? ofertaFuture;
   final Future<List<AlcaldiaData>>? dataFuture;
   final Future<String>? geometryFuture;
 
@@ -375,7 +376,7 @@ class _MapScreenState extends State<MapScreen> {
   String? _selected;
   late final Future<List<AlcaldiaData>> _dataFuture;
   late final Future<String> _geometryFuture;
-  late final _oferta = cargarOfertaInfantil();
+  late final _oferta = widget.ofertaFuture ?? cargarOfertaInfantil();
 
   @override
   void initState() {
@@ -425,6 +426,8 @@ class _MapScreenState extends State<MapScreen> {
             const SizedBox(height: 14),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
+              key: ValueKey(_selected),
+              isExpanded: true,
               initialValue: _selected,
               decoration: const InputDecoration(labelText: 'Alcaldía'),
               hint: const Text('Selecciona una alcaldía'),
@@ -725,7 +728,7 @@ class _AlcaldiaPainter extends CustomPainter {
     for (final feature in features) {
       final isSelected = feature.name == selected;
       final paint = Paint()
-        ..color = isSelected ? _brand : _brandSoft
+        ..color = isSelected ? _brand : const Color(0xFFD7C5F0)
         ..style = PaintingStyle.fill;
       final border = Paint()
         ..color = isSelected ? _brandDark : const Color(0xFF9A86C7)
@@ -745,9 +748,12 @@ class _AlcaldiaPainter extends CustomPainter {
         canvas.drawPath(path, border);
       }
     }
+    final halo = Paint()..color = Colors.white;
     final marcador = Paint()..color = const Color(0xFF075E55);
     for (final punto in puntos) {
-      canvas.drawCircle(mapping.toCanvas(punto), 2.2, marcador);
+      final centro = mapping.toCanvas(punto);
+      canvas.drawCircle(centro, 3.2, halo);
+      canvas.drawCircle(centro, 2.2, marcador);
     }
   }
 
@@ -1006,7 +1012,7 @@ class _SearchScreenState extends State<SearchScreen> {
           const SizedBox(height: 8),
           Text('Paso ${_step + 1} de 4 · ${['Servicio', 'Horario', 'Distancia', 'Resultados'][_step]}', style: const TextStyle(color: _muted, fontWeight: FontWeight.w600)),
           const SizedBox(height: 16),
-          if (_step == 0) DropdownButtonFormField<String>(initialValue: _type, decoration: const InputDecoration(labelText: '¿Qué tipo de cuidado buscas?'), items: const [DropdownMenuItem(value: 'Cuidado infantil', child: Text('Cuidado infantil')), DropdownMenuItem(value: 'Cuidado para personas mayores', child: Text('Cuidado para personas mayores'))], onChanged: (value) { if (value != null) setState(() => _type = value); }),
+          if (_step == 0) DropdownButtonFormField<String>(isExpanded: true, initialValue: _type, decoration: const InputDecoration(labelText: '¿Qué tipo de cuidado buscas?'), items: const [DropdownMenuItem(value: 'Cuidado infantil', child: Text('Cuidado infantil')), DropdownMenuItem(value: 'Cuidado para personas mayores', child: Text('Cuidado para personas mayores'))], onChanged: (value) { if (value != null) setState(() => _type = value); }),
           if (_step == 1) const _Card(child: Text('Lunes y martes · 09:00 a 12:00', style: TextStyle(color: _ink, fontWeight: FontWeight.w700))),
           if (_step == 2) const _Card(child: Text('Distancia máxima aproximada: 10 km', style: TextStyle(color: _ink, fontWeight: FontWeight.w700))),
           if (_step == 3) _MatchingResult(

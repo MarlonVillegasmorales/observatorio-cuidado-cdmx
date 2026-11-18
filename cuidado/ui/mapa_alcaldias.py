@@ -22,9 +22,9 @@ from cuidado.services.mapa_alcaldias import (
 )
 
 
-COLOR_MAPA = "#EDE9FE"
-COLOR_BORDE = "#CBD5E1"
-COLOR_SELECCION = "#6D28D9"
+COLOR_MAPA = "#D7C5F0"
+COLOR_BORDE = "#9A86BB"
+COLOR_SELECCION = "#7036C4"
 COLOR_TEXTO = "#172033"
 AGE_INDICATORS = [
     "pob_0_4",
@@ -71,8 +71,8 @@ def _crear_mapa(geometria, clave_seleccionada: str | None, grupos=()) -> folium.
             name=nombre,
             embed=True,
             style_function=lambda _, selected=seleccionada: {
-                "fillColor": COLOR_MAPA if not selected else "#D8C8FA",
-                "color": COLOR_SELECCION if selected else COLOR_BORDE,
+                "fillColor": COLOR_SELECCION if selected else COLOR_MAPA,
+                "color": "#41256F" if selected else COLOR_BORDE,
                 "weight": 3 if selected else 1,
                 "fillOpacity": 0.9,
             },
@@ -196,7 +196,6 @@ def mostrar_mapa_alcaldias() -> None:
         format_func=lambda clave: "Selecciona una alcaldía" if not clave else nombre_alcaldia(clave),
     )
     if st.button("Ver toda CDMX", key="mapa_alcaldia_reset"):
-        st.session_state["mapa_alcaldia_ignored_click"] = seleccion
         st.session_state["mapa_alcaldia_pending"] = ""
         st.rerun()
 
@@ -220,7 +219,7 @@ def mostrar_mapa_alcaldias() -> None:
             mapa = _crear_mapa(geometria, seleccion or None, grupos)
             evento = st_folium(
                 mapa,
-                key="mapa-alcaldias",
+                key=f"mapa-alcaldias-{clave_directorio or 'cdmx'}",
                 height=420,
                 use_container_width=True,
                 returned_objects=["last_active_drawing"],
@@ -231,12 +230,7 @@ def mostrar_mapa_alcaldias() -> None:
             evento = None
         dibujo = evento.get("last_active_drawing") if evento else None
         clave_clic = (dibujo or {}).get("properties", {}).get("clave")
-        ignorada = st.session_state.pop("mapa_alcaldia_ignored_click", None)
-        ultimo_clic = st.session_state.get("mapa_alcaldia_last_click")
-        if clave_clic == ignorada:
-            clave_clic = None
-        if clave_clic in claves and clave_clic != seleccion and clave_clic != ultimo_clic:
-            st.session_state["mapa_alcaldia_last_click"] = clave_clic
+        if clave_clic in claves and clave_clic != seleccion:
             st.session_state["mapa_alcaldia_pending"] = clave_clic
             st.rerun()
 

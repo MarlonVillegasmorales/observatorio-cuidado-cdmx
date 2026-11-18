@@ -36,6 +36,12 @@ def mostrar_directorio(grupos, clave):
     seleccion = [grupos[clave]] if clave else list(grupos.values())
     resumen = {k: sum(g["resumen"][k] for g in seleccion) for k in seleccion[0]["resumen"]}
     st.subheader("Oferta infantil documentada")
+    for columna, (campo, etiqueta) in zip(st.columns(3), [
+        ("sedes_unicas", "Sedes documentadas"),
+        ("con_horario", "Con horario publicado"),
+        ("con_capacidad_exacta", "Con capacidad exacta publicada"),
+    ]):
+        columna.metric(etiqueta, resumen[campo])
     mostrar_horario(resumen, seleccion[0]["nombre"] if clave else "Toda la CDMX")
     with st.expander("Lugares y disponibilidad"):
         st.write(f"{resumen['con_capacidad_exacta']} centros publicaron cuántas personas podían atender "
@@ -49,7 +55,8 @@ def mostrar_directorio(grupos, clave):
     with st.expander("Cómo protegemos tus datos"):
         st.write("Puedes consultar el mapa sin dar tu nombre ni tu ubicación. Los puntos representan centros de cuidado. El directorio publica domicilios institucionales y cifras por sede. Los datos de niñas, niños, familias y personas trabajadoras quedan fuera de este directorio.")
     sedes = [s for g in seleccion for s in g["sedes"]]
-    st.caption(f"{sum('punto' in s for s in sedes)} sedes con coordenadas. "
+    ubicadas = sum("punto" in s for s in sedes)
+    st.caption(f"{ubicadas} sedes con punto en el mapa · {len(sedes) - ubicadas} solo con domicilio en el directorio. "
                "Los horarios y capacidades corresponden al periodo de cada fuente.")
     if not clave:
         return

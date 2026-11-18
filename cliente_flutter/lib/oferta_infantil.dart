@@ -49,6 +49,7 @@ class OfertaInfantil extends StatelessWidget {
     final sedes = grupos
         .expand((g) => (g['sedes'] as List).cast<Registro>())
         .toList();
+    final ubicadas = sedes.where((s) => s.containsKey('punto')).length;
     final porRed = <String, List<Registro>>{};
     for (final s in sedes) {
       for (final u in (s['unidades'] as List).cast<Registro>()) {
@@ -65,9 +66,21 @@ class OfertaInfantil extends StatelessWidget {
               'Oferta infantil documentada',
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final (campo, etiqueta) in const [
+                  ('sedes_unicas', 'Sedes documentadas'),
+                  ('con_horario', 'Con horario publicado'),
+                  ('con_capacidad_exacta', 'Con capacidad exacta publicada'),
+                ])
+                  Chip(label: Text('${total(campo)} · $etiqueta')),
+              ],
+            ),
             ResumenHorario(nombre: alcaldia ?? 'Toda la CDMX', sedes: total('sedes_unicas'), horario: total('con_horario')),
             Text(
-              "${sedes.where((s) => s.containsKey('punto')).length} sedes con coordenadas. Los datos corresponden al periodo de cada fuente.",
+              "$ubicadas sedes con punto en el mapa · ${sedes.length - ubicadas} solo con domicilio en el directorio. Los datos corresponden al periodo de cada fuente.",
             ),
             ExpansionTile(
               title: const Text('Lugares y disponibilidad'),

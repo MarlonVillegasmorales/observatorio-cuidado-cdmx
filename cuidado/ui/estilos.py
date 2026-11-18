@@ -234,6 +234,7 @@ def aplicar_estilos() -> None:
             overflow: hidden;
         }
         @media (max-width: 768px) {
+            [data-testid="stImage"], [data-testid="stImage"] img { max-width: 100%; height: auto; }
             .block-container { padding: 1rem 0.8rem 2.5rem; }
             .st-key-nav-desktop { display: none; }
             .st-key-nav-mobile { display: block; }
