@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import html
 
-import folium
+from pathlib import Path
 import pandas as pd
 import streamlit as st
-from streamlit_folium import st_folium
+from streamlit.components.v1 import declare_component
 
-from cuidado.ui.directorio_infantil import ARCHIVO, agregar_puntos, cargar_directorio, mostrar_directorio, mostrar_horario
+from cuidado.ui.directorio_infantil import ARCHIVO, cargar_directorio, mostrar_directorio, mostrar_horario
 from cuidado.services.mapa_alcaldias import (
     cargar_indicadores_alcaldias,
     cargar_mapa_alcaldias,
@@ -22,9 +22,6 @@ from cuidado.services.mapa_alcaldias import (
 )
 
 
-COLOR_MAPA = "#D7C5F0"
-COLOR_BORDE = "#9A86BB"
-COLOR_SELECCION = "#7036C4"
 COLOR_TEXTO = "#172033"
 AGE_INDICATORS = [
     "pob_0_4",
@@ -49,53 +46,27 @@ AGE_INDICATORS = [
 ]
 
 
-def _crear_mapa(geometria, clave_seleccionada: str | None, grupos=()) -> folium.Map:
-    min_longitud, min_latitud, max_longitud, max_latitud = geometria.total_bounds
-    mapa = folium.Map(
-        location=[(min_latitud + max_latitud) / 2, (min_longitud + max_longitud) / 2],
-        tiles=None,
-        zoom_control=True,
-        control_scale=True,
-    )
-    mapa.fit_bounds([[min_latitud, min_longitud], [max_latitud, max_longitud]])
+_mapa_territorial = declare_component(
+    "mapa_territorial", path=str(Path(__file__).with_name("mapa_territorial"))
+)
+
+
+def _seleccionar_en_mapa(geometria, seleccion, grupos):
+    zonas = []
     for _, fila in geometria.iterrows():
         clave = str(fila["clave"])
-        nombre = nombre_alcaldia(clave) or str(fila["alcaldia"]).title()
-        seleccionada = clave == clave_seleccionada
-        folium.GeoJson(
-            data={
-                "type": "Feature",
-                "geometry": fila.geometry.__geo_interface__,
-                "properties": {"clave": clave, "nombre": nombre},
-            },
-            name=nombre,
-            embed=True,
-            style_function=lambda _, selected=seleccionada: {
-                "fillColor": COLOR_SELECCION if selected else COLOR_MAPA,
-                "color": "#41256F" if selected else COLOR_BORDE,
-                "weight": 3 if selected else 1,
-                "fillOpacity": 0.9,
-            },
-            highlight_function=lambda _: {
-                "color": COLOR_SELECCION,
-                "weight": 3,
-                "fillOpacity": 0.95,
-            },
-            tooltip=folium.GeoJsonTooltip(
-                fields=["nombre"],
-                aliases=["Alcaldía"],
-                labels=False,
-                localize=False,
-                style=(
-                    "background-color: white; color: #172033; "
-                    "font-family: sans-serif; font-size: 13px; padding: 8px;"
-                ),
-                sticky=True,
-                opacity=0.95,
-            ),
-        ).add_to(mapa)
-    agregar_puntos(mapa, grupos)
-    return mapa
+        zonas.append({
+            "clave": clave, "nombre": nombre_alcaldia(clave),
+            "geometria": fila.geometry.__geo_interface__,
+        })
+    sedes = [
+        {"punto": sede["punto"], "nombre": " / ".join(u["nombre"] for u in sede["unidades"])}
+        for grupo in grupos for sede in grupo["sedes"] if sede.get("punto")
+    ]
+    return _mapa_territorial(
+        zonas=zonas, sedes=sedes, seleccion=seleccion, limites=geometria.total_bounds.tolist(),
+        key=f"mapa_territorial_{seleccion or 'cdmx'}", default=None,
+    )
 
 
 def _valor_texto(fila: pd.Series | None) -> str:
@@ -216,20 +187,11 @@ def mostrar_mapa_alcaldias() -> None:
     else:
         try:
             grupos = [directorio[clave_directorio]] if clave_directorio in directorio else directorio.values()
-            mapa = _crear_mapa(geometria, seleccion or None, grupos)
-            evento = st_folium(
-                mapa,
-                key=f"mapa-alcaldias-{clave_directorio or 'cdmx'}",
-                height=420,
-                use_container_width=True,
-                returned_objects=["last_active_drawing"],
-            )
+            clave_clic = _seleccionar_en_mapa(geometria, seleccion, grupos)
         except (RuntimeError, ValueError, TypeError) as error:
             st.error(f"No se pudo inicializar el mapa interactivo: {error}")
             st.info("La consulta continúa disponible: activa «Consultar sin mapa».")
-            evento = None
-        dibujo = evento.get("last_active_drawing") if evento else None
-        clave_clic = (dibujo or {}).get("properties", {}).get("clave")
+            clave_clic = None
         if clave_clic in claves and clave_clic != seleccion:
             st.session_state["mapa_alcaldia_pending"] = clave_clic
             st.rerun()
@@ -358,6 +320,17 @@ def mostrar_comparativo_alcaldias() -> None:
         for columna, grupo in zip(st.columns(2), par):
             with columna:
                 mostrar_horario(grupo["resumen"], grupo["nombre"])
+        with st.expander("Fuentes de los horarios"):
+            st.caption("Cada porcentaje usa todas las sedes documentadas de su alcaldía. El horario corresponde al periodo publicado por cada fuente.")
+            for grupo in par:
+                st.markdown(f"**{grupo['nombre']}**")
+                fuentes_horario = sorted({
+                    (unidad["red"], unidad["periodo_horario"], unidad["fuente_url"])
+                    for sede in grupo["sedes"] for unidad in sede["unidades"]
+                    if unidad.get("apertura")
+                })
+                for red, periodo, url in fuentes_horario:
+                    st.markdown(f"[{red} · {periodo}]({url})")
     else:
         st.caption("Falta información del directorio para comparar este par.")
 

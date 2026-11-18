@@ -1,9 +1,7 @@
 """Capa documental compartida con el explorador móvil."""
-import html
 import json
 from pathlib import Path
 
-import folium
 import streamlit as st
 
 ARCHIVO = Path(__file__).resolve().parents[2] / "cliente_flutter/assets/data/directorio_infantil.json"
@@ -12,15 +10,6 @@ ARCHIVO = Path(__file__).resolve().parents[2] / "cliente_flutter/assets/data/dir
 @st.cache_data
 def cargar_directorio(version):
     return json.loads(ARCHIVO.read_text(encoding="utf8"))
-
-
-def agregar_puntos(mapa, grupos):
-    for grupo in grupos:
-        for sede in grupo["sedes"]:
-            if punto := sede.get("punto"):
-                nombres = " / ".join(u["nombre"] for u in sede["unidades"])
-                folium.CircleMarker(punto, radius=4, color="#075e55", fill=True,
-                                    fill_opacity=0.85, tooltip=html.escape(nombres)).add_to(mapa)
 
 
 def mostrar_horario(resumen, territorio):

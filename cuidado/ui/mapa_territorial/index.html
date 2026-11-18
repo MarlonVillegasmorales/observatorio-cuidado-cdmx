@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mapa de centros de cuidado de la CDMX</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:16px system-ui;color:#19152f}section{position:relative;background:#f6f3fc;border:1px solid #d9d3e6;border-radius:14px;overflow:hidden}svg{width:100%;height:340px;display:block}.zona{fill:#d7c5f0;stroke:#765b99;stroke-width:1;vector-effect:non-scaling-stroke;cursor:pointer}.zona:hover,.zona:focus{stroke:#351458;stroke-width:3}.activa{fill:#7036c4}.sede{fill:#075e55;stroke:white;stroke-width:.8}nav{position:absolute;right:8px;top:8px;display:grid;gap:4px}button{width:40px;height:40px;background:white;border:1px solid #aa99bd;border-radius:8px;color:#421777;font-size:19px;cursor:pointer}button:focus-visible{outline:3px solid #a05e00}button:disabled{color:#92889b}p{font-size:14px;margin:6px 4px}
+</style>
+<section><svg role="group" aria-label="Seleccionar una alcaldía de la CDMX"></svg>
+<nav aria-label="Escala del mapa"><button id="mas" aria-label="Acercar">+</button><button id="menos" aria-label="Alejar">−</button></nav></section>
+<p>● Centro con coordenadas · Elige una alcaldía para consultar el directorio.</p>
+<script>
+const svg=document.querySelector('svg'), ns='http://www.w3.org/2000/svg';
+const host=new URL(document.referrer || location.href).origin;
+function enviar(type,extra={}){parent.postMessage({isStreamlitMessage:true,type,...extra},host)}
+function crear(tag,attrs,parentNode){const n=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);parentNode.append(n);return n}
+let zoom=1, centro=[180,180];
+function escala(){
+  const lado=360/zoom;
+  centro=centro.map(c=>Math.min(360-lado/2,Math.max(lado/2,c)));
+  svg.setAttribute('viewBox',[centro[0]-lado/2,centro[1]-lado/2,lado,lado].join(' '));
+  svg.style.touchAction=zoom>1?'none':'auto';
+  document.querySelector('#mas').disabled=zoom>=4;
+  document.querySelector('#menos').disabled=zoom<=1;
+}
+document.querySelector('#mas').onclick=()=>{zoom=Math.min(4,zoom*1.5);escala()};
+document.querySelector('#menos').onclick=()=>{zoom=Math.max(1,zoom/1.5);if(zoom===1)centro=[180,180];escala()};
+let arrastre=null, omitirClic=false;
+svg.onpointerdown=ev=>{
+  omitirClic=false;
+  if(zoom>1)arrastre={x:ev.clientX,y:ev.clientY,origen:[...centro]};
+};
+svg.onpointermove=ev=>{
+  if(!arrastre||!ev.buttons)return;
+  const dx=ev.clientX-arrastre.x,dy=ev.clientY-arrastre.y;
+  if(Math.hypot(dx,dy)<5&&!omitirClic)return;
+  omitirClic=true;
+  svg.setPointerCapture(ev.pointerId);
+  const escalaPantalla=svg.getScreenCTM().a;
+  centro=[arrastre.origen[0]-dx/escalaPantalla,arrastre.origen[1]-dy/escalaPantalla];
+  escala();
+};
+svg.onpointerup=svg.onpointercancel=()=>{arrastre=null};
+svg.addEventListener('click',ev=>{if(omitirClic){ev.stopPropagation();omitirClic=false}},true);
+function pintar({zonas,sedes,limites,seleccion}){
+  const [o,s,e,n]=limites, factor=332/Math.max(e-o,n-s);
+  function xy([lon,lat]){return [180+(lon-(o+e)/2)*factor,180+((s+n)/2-lat)*factor]}
+  svg.replaceChildren();
+  for(const z of zonas){
+    const g=z.geometria,poligonos=g.type==='Polygon'?[g.coordinates]:g.coordinates;
+    const d=poligonos.flatMap(poly=>poly.map(ring=>'M'+ring.map(pt=>xy(pt).map(v=>v.toFixed(3)).join(',')).join('L')+'Z')).join('');
+    const path=crear('path',{d,class:'zona'+(z.clave===seleccion?' activa':''),'fill-rule':'evenodd',role:'button',tabindex:0,'aria-label':z.nombre,'aria-pressed':z.clave===seleccion},svg);
+    crear('title',{},path).textContent=z.nombre;
+    const elegir=()=>enviar('streamlit:setComponentValue',{value:z.clave,dataType:'json'});
+    path.onclick=elegir;
+    path.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();elegir()}};
+    if(z.clave===seleccion){const b=path.getBBox();centro=[b.x+b.width/2,b.y+b.height/2]}
+  }
+  for(const sede of sedes){
+    const [lat,lon]=sede.punto,[cx,cy]=xy([lon,lat]);
+    const punto=crear('circle',{cx,cy,r:2,class:'sede'},svg);
+    crear('title',{},punto).textContent=sede.nombre;
+    punto.onclick=ev=>{punto.style.pointerEvents='none';const zona=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.zona');punto.style.pointerEvents='';if(zona)zona.dispatchEvent(new MouseEvent('click'))};
+  }
+  if(zoom===1)svg.setAttribute('viewBox','0 0 360 360');else escala();
+  document.querySelector('#menos').disabled=zoom===1;
+  enviar('streamlit:setFrameHeight',{height:document.documentElement.scrollHeight});
+}
+window.addEventListener('message',ev=>{if(ev.source===parent && ev.origin===host && ev.data.type==='streamlit:render')pintar(ev.data.args)});
+enviar('streamlit:componentReady',{apiVersion:1});
+</script></html>

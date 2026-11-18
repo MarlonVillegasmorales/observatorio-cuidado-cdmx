@@ -803,7 +803,8 @@ class _AgeBars extends StatelessWidget {
 }
 
 class CompareScreen extends StatefulWidget {
-  const CompareScreen({super.key, this.dataFuture});
+  const CompareScreen({super.key, this.dataFuture, this.ofertaFuture});
+  final Future<Map<String, Registro>>? ofertaFuture;
   final Future<List<AlcaldiaData>>? dataFuture;
 
   @override
@@ -811,7 +812,7 @@ class CompareScreen extends StatefulWidget {
 }
 
 class _CompareScreenState extends State<CompareScreen> {
-  late final _oferta = cargarOfertaInfantil();
+  late final _oferta = widget.ofertaFuture ?? cargarOfertaInfantil();
   String _a = 'Iztapalapa';
   String _b = 'Benito Juárez';
   late final Future<List<AlcaldiaData>> _dataFuture =
@@ -870,15 +871,30 @@ class _CompareScreenState extends State<CompareScreen> {
             builder: (context, snapshot) {
               if (snapshot.hasError) return const Text('Directorio infantil no disponible.');
               if (!snapshot.hasData) return const Text('Cargando directorio infantil.');
-              final grupos = {for (final g in snapshot.data!.values) g['nombre']: g['resumen']};
+              final grupos = {for (final g in snapshot.data!.values) g['nombre']: g};
               final par = [_a, _b];
-              if (par.any((nombre) => (grupos[nombre]?['sedes_unicas'] ?? 0) == 0)) {
+              if (par.any((nombre) => (grupos[nombre]?['resumen']['sedes_unicas'] ?? 0) == 0)) {
                 return const Text('Falta información del directorio para comparar este par.');
               }
               return _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('Centros con horario publicado', style: Theme.of(context).textTheme.titleMedium),
                 for (final nombre in par)
-                  ResumenHorario(nombre: nombre, sedes: grupos[nombre]['sedes_unicas'], horario: grupos[nombre]['con_horario']),
+                  ResumenHorario(nombre: nombre, sedes: grupos[nombre]!['resumen']['sedes_unicas'], horario: grupos[nombre]!['resumen']['con_horario']),
+                ExpansionTile(
+                  title: const Text('Fuentes de los horarios'),
+                  children: [
+                    const Text('Cada porcentaje usa todas las sedes documentadas de su alcaldía. El horario corresponde al periodo publicado por cada fuente.'),
+                    for (final nombre in par)
+                      ListTile(title: Text(nombre), subtitle: SelectableText(
+                        ({
+                          for (final sede in grupos[nombre]!['sedes'])
+                            for (final unidad in sede['unidades'])
+                              if (unidad['apertura'] != null)
+                                "${unidad['red']} · ${unidad['periodo_horario']}\n${unidad['fuente_url']}",
+                        }.toList()..sort()).join('\n\n'),
+                      )),
+                  ],
+                ),
               ]));
             },
           ),

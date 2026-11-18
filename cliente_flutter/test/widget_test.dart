@@ -195,10 +195,13 @@ void main() {
   });
 
   testWidgets('compara cifras territoriales cargadas', (tester) async {
+    final raw = File('assets/data/directorio_infantil.json').readAsStringSync();
+    final grupos = (jsonDecode(raw) as Map).cast<String, Map<String, dynamic>>();
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: CompareScreen(
+            ofertaFuture: Future.value(grupos),
             dataFuture: Future.value([
               const AlcaldiaData(
                 name: 'Iztapalapa',
@@ -227,6 +230,16 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Compara dos alcaldías'), findsOneWidget);
+    expect(find.text('Iztapalapa · 88 %'), findsOneWidget);
+    expect(find.text('37 de 42 sedes documentadas tienen horario publicado.'), findsOneWidget);
+    final segundo = find.byType(DropdownButtonFormField<String>).last;
+    await tester.ensureVisible(segundo);
+    await tester.tap(segundo);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cuauhtémoc').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Cuauhtémoc · 50 %'), findsOneWidget);
+    expect(find.text('21 de 42 sedes documentadas tienen horario publicado.'), findsOneWidget);
     expect(
       find.text('Personas por cada 100 habitantes · Censo 2020 observado'),
       findsOneWidget,
