@@ -478,7 +478,7 @@ class _MapScreenState extends State<MapScreen> {
               future: _oferta,
               builder: (context, snapshot) {
                 if (snapshot.hasError) return const Text('Directorio infantil no disponible.');
-                if (!snapshot.hasData) return const LinearProgressIndicator();
+                if (!snapshot.hasData) return const Text('Cargando directorio infantil…');
                 final grupos = snapshot.data!.values.where((g) =>
                     _selected == null || g['nombre'] == _selected).toList();
                 return OfertaInfantil(key: ValueKey(_selected), grupos: grupos, alcaldia: _selected);
