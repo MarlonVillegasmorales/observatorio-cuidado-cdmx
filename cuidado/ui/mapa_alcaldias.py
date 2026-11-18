@@ -9,6 +9,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_folium import st_folium
 
+from cuidado.ui.directorio_infantil import ARCHIVO, agregar_puntos, cargar_directorio, mostrar_directorio
 from cuidado.services.mapa_alcaldias import (
     cargar_indicadores_alcaldias,
     cargar_mapa_alcaldias,
@@ -48,7 +49,7 @@ AGE_INDICATORS = [
 ]
 
 
-def _crear_mapa(geometria, clave_seleccionada: str | None) -> folium.Map:
+def _crear_mapa(geometria, clave_seleccionada: str | None, grupos=()) -> folium.Map:
     min_longitud, min_latitud, max_longitud, max_latitud = geometria.total_bounds
     mapa = folium.Map(
         location=[(min_latitud + max_latitud) / 2, (min_longitud + max_longitud) / 2],
@@ -93,6 +94,7 @@ def _crear_mapa(geometria, clave_seleccionada: str | None) -> folium.Map:
                 opacity=0.95,
             ),
         ).add_to(mapa)
+    agregar_puntos(mapa, grupos)
     return mapa
 
 
@@ -208,11 +210,18 @@ def mostrar_mapa_alcaldias() -> None:
         key="mapa_alcaldia_sin_mapa",
         help="Muestra el selector y los datos sin inicializar el componente del mapa.",
     )
+    try:
+        directorio = cargar_directorio(ARCHIVO.stat().st_mtime_ns)
+    except (OSError, ValueError):
+        directorio = {}
+        st.warning("Directorio infantil no disponible.")
+    clave_directorio = (seleccion or "").replace(" ", "")
     if consultar_sin_mapa:
         st.info("Consulta sin mapa activa. Usa esta opción si el componente interactivo no termina de cargar.")
     else:
         try:
-            mapa = _crear_mapa(geometria, seleccion or None)
+            grupos = [directorio[clave_directorio]] if clave_directorio in directorio else directorio.values()
+            mapa = _crear_mapa(geometria, seleccion or None, grupos)
             evento = st_folium(
                 mapa,
                 key="mapa-alcaldias",
@@ -235,6 +244,8 @@ def mostrar_mapa_alcaldias() -> None:
             st.session_state["mapa_alcaldia_pending"] = clave_clic
             st.rerun()
 
+    if directorio:
+        mostrar_directorio(directorio, clave_directorio)
     if not seleccion:
         st.info("Selecciona una alcaldía para consultar sus datos.")
         return

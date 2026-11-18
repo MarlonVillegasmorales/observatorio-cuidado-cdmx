@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'oferta_infantil.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -358,7 +360,7 @@ class _ActionCard extends StatelessWidget {
       );
 }
 
-const _alcaldias = ['Álvaro Obregón', 'Azcapotzalco', 'Benito Juárez', 'Coyoacán', 'Cuajimalpa', 'Cuauhtémoc', 'Gustavo A. Madero', 'Iztacalco', 'Iztapalapa', 'La Magdalena Contreras', 'Miguel Hidalgo', 'Milpa Alta', 'Tláhuac', 'Tlalpan', 'Venustiano Carranza', 'Xochimilco'];
+const _alcaldias = ['Álvaro Obregón', 'Azcapotzalco', 'Benito Juárez', 'Coyoacán', 'Cuajimalpa de Morelos', 'Cuauhtémoc', 'Gustavo A. Madero', 'Iztacalco', 'Iztapalapa', 'La Magdalena Contreras', 'Miguel Hidalgo', 'Milpa Alta', 'Tláhuac', 'Tlalpan', 'Venustiano Carranza', 'Xochimilco'];
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key, this.dataFuture, this.geometryFuture});
@@ -373,6 +375,7 @@ class _MapScreenState extends State<MapScreen> {
   String? _selected;
   late final Future<List<AlcaldiaData>> _dataFuture;
   late final Future<String> _geometryFuture;
+  late final _oferta = cargarOfertaInfantil();
 
   @override
   void initState() {
@@ -443,11 +446,25 @@ class _MapScreenState extends State<MapScreen> {
                     child: Center(child: Text('Cargando cartografía territorial...')),
                   );
                 }
-                return _TerritorialMap(
+                return FutureBuilder<Map<String, Registro>>(
+                  future: _oferta,
+                  builder: (context, oferta) {
+                    final puntos = <Offset>[];
+                    for (final grupo in oferta.data?.values ?? <Registro>[]) {
+                      if (_selected != null && grupo['nombre'] != _selected) continue;
+                      for (final sede in grupo['sedes']) {
+                        final p = sede['punto'];
+                        if (p != null) puntos.add(Offset(p[1], p[0]));
+                      }
+                    }
+                    return _TerritorialMap(
+                  puntos: puntos,
                   geoJson: geometrySnapshot.data!,
                   selected: _selected,
                   onSelected: (value) => setState(() => _selected = value),
                   onReset: () => setState(() => _selected = null),
+                );
+                  },
                 );
               },
             ),
@@ -456,6 +473,16 @@ class _MapScreenState extends State<MapScreen> {
               onPressed: () => setState(() => _selected = null),
               icon: const Icon(Icons.location_on_outlined),
               label: const Text('Ver toda CDMX'),
+            ),
+            FutureBuilder<Map<String, Registro>>(
+              future: _oferta,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) return const Text('Directorio infantil no disponible.');
+                if (!snapshot.hasData) return const LinearProgressIndicator();
+                final grupos = snapshot.data!.values.where((g) =>
+                    _selected == null || g['nombre'] == _selected).toList();
+                return OfertaInfantil(key: ValueKey(_selected), grupos: grupos, alcaldia: _selected);
+              },
             ),
             if (selectedData != null) ...[
               const SizedBox(height: 20),
@@ -487,12 +514,14 @@ class _GeoFeature {
 
 class _TerritorialMap extends StatefulWidget {
   const _TerritorialMap({
+    required this.puntos,
     required this.geoJson,
     required this.selected,
     required this.onSelected,
     required this.onReset,
   });
 
+  final List<Offset> puntos;
   final String geoJson;
   final String? selected;
   final ValueChanged<String> onSelected;
@@ -582,7 +611,7 @@ class _TerritorialMapState extends State<_TerritorialMap> {
               label: 'Mapa territorial de las 16 alcaldías',
               button: true,
               child: CustomPaint(
-                painter: _AlcaldiaPainter(features: _features, selected: widget.selected),
+                painter: _AlcaldiaPainter(features: _features, selected: widget.selected, puntos: widget.puntos),
                 child: const SizedBox.expand(),
               ),
             ),
@@ -685,7 +714,8 @@ class _MapMapping {
 }
 
 class _AlcaldiaPainter extends CustomPainter {
-  const _AlcaldiaPainter({required this.features, required this.selected});
+  const _AlcaldiaPainter({required this.features, required this.selected, required this.puntos});
+  final List<Offset> puntos;
   final List<_GeoFeature> features;
   final String? selected;
 
@@ -716,11 +746,15 @@ class _AlcaldiaPainter extends CustomPainter {
         canvas.drawPath(path, border);
       }
     }
+    final marcador = Paint()..color = const Color(0xFF075E55);
+    for (final punto in puntos) {
+      canvas.drawCircle(mapping.toCanvas(punto), 2.2, marcador);
+    }
   }
 
   @override
   bool shouldRepaint(covariant _AlcaldiaPainter oldDelegate) =>
-      oldDelegate.selected != selected || oldDelegate.features != features;
+      oldDelegate.selected != selected || oldDelegate.features != features || oldDelegate.puntos != puntos;
 }
 
 class _Metric extends StatelessWidget {
