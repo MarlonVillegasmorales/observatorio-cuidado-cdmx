@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,21 +19,27 @@ void main() {
   });
 
   testWidgets('las tarjetas de inicio abren la sección correspondiente', (tester) async {
+    tester.view..physicalSize = const Size(360, 800)..devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const ObservatorioApp());
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Explorar mapa').first);
     await tester.tap(find.text('Explorar mapa').first);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('nav_mapa')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_inicio')));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Comparar alcaldías').first);
     await tester.tap(find.text('Comparar alcaldías').first);
     await tester.pumpAndSettle();
     expect(find.text('Compara dos alcaldías'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_inicio')));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Probar búsqueda').first);
     await tester.tap(find.text('Probar búsqueda').first);
     await tester.pumpAndSettle();
     expect(find.text('Paso 1 de 4 · Servicio'), findsOneWidget);
@@ -70,6 +79,44 @@ void main() {
     await tester.tap(find.text('Ver toda CDMX'));
     await tester.pumpAndSettle();
     expect(find.text('Datos de Iztapalapa'), findsNothing);
+  });
+
+  testWidgets('el polígono y el selector muestran las mismas sedes de Iztapalapa', (tester) async {
+    final geo = File('assets/data/alcaldias.geojson').readAsStringSync();
+    final raw = File('assets/data/directorio_infantil.json').readAsStringSync();
+    final grupos = (jsonDecode(raw) as Map).cast<String, Map<String, dynamic>>();
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: MapScreen(
+      geometryFuture: Future.value(geo),
+      ofertaFuture: Future.value(grupos),
+      dataFuture: Future.value([]),
+    ))));
+    await tester.pumpAndSettle();
+    void comprobar() {
+      for (final label in ['42 · Sedes documentadas', '37 · Con horario publicado',
+        '28 · Con capacidad exacta publicada', 'Iztapalapa · 88 %']) {
+        expect(find.text(label), findsOneWidget);
+      }
+      expect(find.textContaining('8 sedes con punto en el mapa · 34 solo con domicilio'), findsOneWidget);
+    }
+    final mapa = find.bySemanticsLabel('Mapa territorial de las 16 alcaldías');
+    await tester.ensureVisible(mapa);
+    // Punto interior de Iztapalapa en la cartografía empaquetada, relativo al centro del mapa.
+    final altura = tester.getSize(mapa).height - 28;
+    await tester.tapAt(tester.getCenter(mapa) + Offset(0.1942 * altura, -0.04094 * altura));
+    await tester.pumpAndSettle();
+    comprobar();
+    final reset = find.text('Ver toda CDMX');
+    await tester.ensureVisible(reset);
+    await tester.tap(reset);
+    await tester.pumpAndSettle();
+    expect(find.text('356 · Sedes documentadas'), findsOneWidget);
+    final selector = find.byType(DropdownButtonFormField<String>);
+    await tester.ensureVisible(selector);
+    await tester.tap(selector);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Iztapalapa').last);
+    await tester.pumpAndSettle();
+    comprobar();
   });
 
   testWidgets('la cartografía fallida conserva consulta por lista', (tester) async {
@@ -125,18 +172,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Paso 1 de 4 · Servicio'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Continuar'));
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
     expect(find.text('Paso 2 de 4 · Horario'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Atrás'));
     await tester.tap(find.text('Atrás'));
     await tester.pumpAndSettle();
     expect(find.text('Paso 1 de 4 · Servicio'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Continuar'));
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Continuar'));
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Ver resultados'));
     await tester.tap(find.text('Ver resultados'));
     await tester.pumpAndSettle();
     expect(find.text('Recomendación sintética'), findsOneWidget);
@@ -148,10 +200,13 @@ void main() {
   });
 
   testWidgets('compara cifras territoriales cargadas', (tester) async {
+    final raw = File('assets/data/directorio_infantil.json').readAsStringSync();
+    final grupos = (jsonDecode(raw) as Map).cast<String, Map<String, dynamic>>();
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: CompareScreen(
+            ofertaFuture: Future.value(grupos),
             dataFuture: Future.value([
               const AlcaldiaData(
                 name: 'Iztapalapa',
@@ -180,6 +235,16 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Compara dos alcaldías'), findsOneWidget);
+    expect(find.text('Iztapalapa · 88 %'), findsOneWidget);
+    expect(find.text('37 de 42 sedes documentadas tienen horario publicado.'), findsOneWidget);
+    final segundo = find.byType(DropdownButtonFormField<String>).last;
+    await tester.ensureVisible(segundo);
+    await tester.tap(segundo);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cuauhtémoc').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Cuauhtémoc · 50 %'), findsOneWidget);
+    expect(find.text('21 de 42 sedes documentadas tienen horario publicado.'), findsOneWidget);
     expect(
       find.text('Personas por cada 100 habitantes · Censo 2020 observado'),
       findsOneWidget,

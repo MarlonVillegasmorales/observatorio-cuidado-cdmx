@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import html
 
-import folium
+from pathlib import Path
 import pandas as pd
 import streamlit as st
-from streamlit_folium import st_folium
+from streamlit.components.v1 import declare_component
 
-from cuidado.ui.directorio_infantil import ARCHIVO, agregar_puntos, cargar_directorio, mostrar_directorio
+from cuidado.ui.directorio_infantil import ARCHIVO, cargar_directorio, mostrar_directorio, mostrar_horario
 from cuidado.services.mapa_alcaldias import (
     cargar_indicadores_alcaldias,
     cargar_mapa_alcaldias,
@@ -22,9 +22,6 @@ from cuidado.services.mapa_alcaldias import (
 )
 
 
-COLOR_MAPA = "#EDE9FE"
-COLOR_BORDE = "#CBD5E1"
-COLOR_SELECCION = "#6D28D9"
 COLOR_TEXTO = "#172033"
 AGE_INDICATORS = [
     "pob_0_4",
@@ -49,53 +46,27 @@ AGE_INDICATORS = [
 ]
 
 
-def _crear_mapa(geometria, clave_seleccionada: str | None, grupos=()) -> folium.Map:
-    min_longitud, min_latitud, max_longitud, max_latitud = geometria.total_bounds
-    mapa = folium.Map(
-        location=[(min_latitud + max_latitud) / 2, (min_longitud + max_longitud) / 2],
-        tiles=None,
-        zoom_control=True,
-        control_scale=True,
-    )
-    mapa.fit_bounds([[min_latitud, min_longitud], [max_latitud, max_longitud]])
+_mapa_territorial = declare_component(
+    "mapa_territorial", path=str(Path(__file__).with_name("mapa_territorial"))
+)
+
+
+def _seleccionar_en_mapa(geometria, seleccion, grupos):
+    zonas = []
     for _, fila in geometria.iterrows():
         clave = str(fila["clave"])
-        nombre = nombre_alcaldia(clave) or str(fila["alcaldia"]).title()
-        seleccionada = clave == clave_seleccionada
-        folium.GeoJson(
-            data={
-                "type": "Feature",
-                "geometry": fila.geometry.__geo_interface__,
-                "properties": {"clave": clave, "nombre": nombre},
-            },
-            name=nombre,
-            embed=True,
-            style_function=lambda _, selected=seleccionada: {
-                "fillColor": COLOR_MAPA if not selected else "#D8C8FA",
-                "color": COLOR_SELECCION if selected else COLOR_BORDE,
-                "weight": 3 if selected else 1,
-                "fillOpacity": 0.9,
-            },
-            highlight_function=lambda _: {
-                "color": COLOR_SELECCION,
-                "weight": 3,
-                "fillOpacity": 0.95,
-            },
-            tooltip=folium.GeoJsonTooltip(
-                fields=["nombre"],
-                aliases=["Alcaldía"],
-                labels=False,
-                localize=False,
-                style=(
-                    "background-color: white; color: #172033; "
-                    "font-family: sans-serif; font-size: 13px; padding: 8px;"
-                ),
-                sticky=True,
-                opacity=0.95,
-            ),
-        ).add_to(mapa)
-    agregar_puntos(mapa, grupos)
-    return mapa
+        zonas.append({
+            "clave": clave, "nombre": nombre_alcaldia(clave),
+            "geometria": fila.geometry.__geo_interface__,
+        })
+    sedes = [
+        {"punto": sede["punto"], "nombre": " / ".join(u["nombre"] for u in sede["unidades"])}
+        for grupo in grupos for sede in grupo["sedes"] if sede.get("punto")
+    ]
+    return _mapa_territorial(
+        zonas=zonas, sedes=sedes, seleccion=seleccion, limites=geometria.total_bounds.tolist(),
+        key=f"mapa_territorial_{seleccion or 'cdmx'}", default=None,
+    )
 
 
 def _valor_texto(fila: pd.Series | None) -> str:
@@ -183,11 +154,7 @@ def mostrar_mapa_alcaldias() -> None:
 
     st.markdown('<div class="section-kicker">Explorador territorial</div>', unsafe_allow_html=True)
     st.header("Explora tu alcaldía")
-    st.write("Selecciona una alcaldía para consultar sus datos.")
-    st.warning(
-        "La población corresponde al Censo 2020 de INEGI (ITER), agregada por alcaldía. "
-        "Los grupos etarios describen población registrada y no equivalen a necesidad de cuidado."
-    )
+    st.write("Elige una alcaldía para ver sus centros y horarios publicados. Cada punto representa una sede con coordenadas.")
     claves = claves_alcaldias(geometria)
     if "mapa_alcaldia_pending" in st.session_state:
         st.session_state["mapa_alcaldia_selector"] = st.session_state.pop("mapa_alcaldia_pending")
@@ -200,7 +167,6 @@ def mostrar_mapa_alcaldias() -> None:
         format_func=lambda clave: "Selecciona una alcaldía" if not clave else nombre_alcaldia(clave),
     )
     if st.button("Ver toda CDMX", key="mapa_alcaldia_reset"):
-        st.session_state["mapa_alcaldia_ignored_click"] = seleccion
         st.session_state["mapa_alcaldia_pending"] = ""
         st.rerun()
 
@@ -221,26 +187,12 @@ def mostrar_mapa_alcaldias() -> None:
     else:
         try:
             grupos = [directorio[clave_directorio]] if clave_directorio in directorio else directorio.values()
-            mapa = _crear_mapa(geometria, seleccion or None, grupos)
-            evento = st_folium(
-                mapa,
-                key="mapa-alcaldias",
-                height=420,
-                use_container_width=True,
-                returned_objects=["last_active_drawing"],
-            )
+            clave_clic = _seleccionar_en_mapa(geometria, seleccion, grupos)
         except (RuntimeError, ValueError, TypeError) as error:
             st.error(f"No se pudo inicializar el mapa interactivo: {error}")
             st.info("La consulta continúa disponible: activa «Consultar sin mapa».")
-            evento = None
-        dibujo = evento.get("last_active_drawing") if evento else None
-        clave_clic = (dibujo or {}).get("properties", {}).get("clave")
-        ignorada = st.session_state.pop("mapa_alcaldia_ignored_click", None)
-        ultimo_clic = st.session_state.get("mapa_alcaldia_last_click")
-        if clave_clic == ignorada:
             clave_clic = None
-        if clave_clic in claves and clave_clic != seleccion and clave_clic != ultimo_clic:
-            st.session_state["mapa_alcaldia_last_click"] = clave_clic
+        if clave_clic in claves and clave_clic != seleccion:
             st.session_state["mapa_alcaldia_pending"] = clave_clic
             st.rerun()
 
@@ -266,13 +218,13 @@ def mostrar_mapa_alcaldias() -> None:
         with columna:
             _tarjeta_indicador(titulo, fila, nota)
 
-    st.subheader("Población por grupos de edad")
-    st.caption(
-        "Los grupos son mutuamente excluyentes según la fuente. Edad no "
-        "especificada se conserva sin redistribuir. Fuente: INEGI, Censo 2020."
-    )
     indicadores_autorizados = indicadores_publicos(indicadores, catalogo)
-    _grafico_edades(indicadores_autorizados, seleccion)
+    with st.expander("Población por grupos de edad"):
+        st.caption(
+            "Los grupos son mutuamente excluyentes según la fuente. Edad no "
+            "especificada se conserva sin redistribuir. Fuente: INEGI, Censo 2020."
+        )
+        _grafico_edades(indicadores_autorizados, seleccion)
     with st.expander("Ver todos los datos", expanded=False):
         st.dataframe(
             indicadores_de_alcaldia(indicadores_autorizados, seleccion)[
@@ -322,7 +274,7 @@ def mostrar_comparativo_alcaldias() -> None:
     st.markdown('<div class="section-kicker">Comparación territorial</div>', unsafe_allow_html=True)
     st.header("Compara dos alcaldías")
     st.write(
-        "Explora cómo cambian la composición de la población entre dos zonas."
+        "Compara los centros con horario publicado y la población por edad."
     )
     mapa_seleccion = st.session_state.get("mapa_alcaldia_selector", "")
     if "comparativo_seleccion_a" not in st.session_state:
@@ -357,6 +309,30 @@ def mostrar_comparativo_alcaldias() -> None:
         format_func=lambda clave: nombres[clave],
     )
     st.session_state["comparativo_seleccion_b"] = alcaldia_b
+
+    try:
+        directorio = cargar_directorio(ARCHIVO.stat().st_mtime_ns)
+    except (OSError, ValueError):
+        directorio = {}
+    par = [directorio.get(clave.replace(" ", "")) for clave in (alcaldia_a, alcaldia_b)]
+    st.subheader("Centros con horario publicado")
+    if all(grupo and grupo["resumen"]["sedes_unicas"] for grupo in par):
+        for columna, grupo in zip(st.columns(2), par):
+            with columna:
+                mostrar_horario(grupo["resumen"], grupo["nombre"])
+        with st.expander("Fuentes de los horarios"):
+            st.caption("Cada porcentaje usa todas las sedes documentadas de su alcaldía. El horario corresponde al periodo publicado por cada fuente.")
+            for grupo in par:
+                st.markdown(f"**{grupo['nombre']}**")
+                fuentes_horario = sorted({
+                    (unidad["red"], unidad["periodo_horario"], unidad["fuente_url"])
+                    for sede in grupo["sedes"] for unidad in sede["unidades"]
+                    if unidad.get("apertura")
+                })
+                for red, periodo, url in fuentes_horario:
+                    st.markdown(f"[{red} · {periodo}]({url})")
+    else:
+        st.caption("Falta información del directorio para comparar este par.")
 
     comparacion = comparacion_composicion(autorizados, alcaldia_a, alcaldia_b)
     if comparacion.empty or comparacion["a"].isna().all():
@@ -463,7 +439,8 @@ def mostrar_comparativo_alcaldias() -> None:
         )
         st.write(
             "Las diferencias describen composición registrada y no indican necesidad "
-            "de cuidado, calidad de servicios ni impacto social. No se muestran "
-            "servicios ni acceso territorial porque el directorio disponible no "
-            "cumple una cobertura y definición comparables verificadas."
+            "de cuidado, calidad de servicios ni impacto social. El porcentaje de "
+            "sedes con horario publicado mide qué tan completos están los registros "
+            "del directorio en cada alcaldía. La disponibilidad de lugares se consulta "
+            "por sede cuando la fuente publica vacantes con fecha."
         )

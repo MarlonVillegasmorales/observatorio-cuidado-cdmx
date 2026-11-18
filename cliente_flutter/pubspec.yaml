@@ -59,6 +59,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/directorio_infantil.json
+    - assets/portada.webp
     - assets/data/alcaldias.json
     - assets/data/alcaldias.geojson
 
