@@ -138,6 +138,18 @@ Firebase es un paso manual pendiente. No se ha ejecutado `firebase deploy`.
 | Simuladores B2B/B2G | Servicio Python canónico y interfaz nueva | API Python canónica | Backend HTTP público | Localmente conectado; publicación bloqueada |
 | Información y créditos | Implementada | Implementada | Documentación local | Verificada |
 
+## Publicación y bloqueo del backend
+
+- PR integrado: `MarlonVillegasmorales/observatorio-cuidado-cdmx#7`.
+- SHA de integración: `d8fb528069250d47e968b0dc3480f9730e57d9a7`.
+- Streamlit público registrado: `https://observatorio-cuidado-cdmx-9tklh8utkwwfn6kgsjwtsf.streamlit.app/`.
+- Firebase Flutter sigue sin una versión pública reconstruida con la API: no existe
+  un destino autorizado y verificable para el backend Python.
+- `Dockerfile.api` y `docs/API_OBSERVATORIO.md` preparan el backend, pero no se
+  desplegará hasta disponer de una plataforma Python autorizada.
+- La vista previa de Flutter anterior no se considera evidencia de esta
+  integración completa y no fue reemplazada.
+
 Preparación reproducible:
 
 ```powershell
