@@ -17,3 +17,4 @@ streamlit-javascript==0.1.5
 pyarrow==26.0.0
 fastapi==0.115.12
 uvicorn==0.34.2
+httpx==0.28.1
