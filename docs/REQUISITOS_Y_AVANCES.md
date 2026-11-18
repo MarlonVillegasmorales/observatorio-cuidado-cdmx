@@ -25,9 +25,9 @@ implican despliegue, uso con participantes ni validación docente.
 | PRI-02 | Demo | No registrar personas en la demostración | La aplicación pública funciona con datos sintéticos y sin base compartida | implementado | sintética/local | Marlon | No usar datos reales sin autorización | `cuidado/ui/app.py`, `docs/ARQUITECTURA.md` | Mantener separación |
 | OPE-01 | Centros | Directorio verificado con cupos y requisitos | Cada centro tiene verificación, horarios, accesibilidad, cupos y fecha de actualización | propuesta futura | pendiente | Equipo | Centros y procedimiento institucional | `docs/CONTRATOS.md` | Definir contrato y piloto |
 | OPE-02 | Seguimiento | Solicitud, confirmación, cancelación, incidencias y liberación | Cada transición queda autorizada y auditable | parcial | sintética/local | Marlon | Roles, privacidad, PostgreSQL y piloto | `cuidado/services/vinculacion.py`, `tests/test_database.py` | Diseñar operación privada |
-| INT-01 | Integración | Recibir entregas de Karla y Azael por contrato | Cada módulo tiene entradas, salidas, fuentes, pruebas y revisión registrada | pendiente | pendiente | Karla / Azael / Marlon | Entregas pendientes | `docs/CONTRATOS.md`, `cuidado/services/integraciones.py` | Recibir y revisar módulos |
-| DAT-04 | Movilidad | Movilidad/CONAPO con granularidad y CRS explícitos | Se distingue proyección de observación y no se confunde distancia con viaje | propuesta futura | pendiente | Karla | Entrega de Karla | `docs/CONTRATOS.md` | Incorporar solo tras validación |
-| B2B-01 | Escenarios | B2B/B2G con fuentes, unidades y supuestos | Cada salida incluye resultado, unidad, periodo, supuestos, fuentes y método | propuesta futura | pendiente | Azael | Entrega de Azael y fuentes | `docs/CONTRATOS.md`, PDF, pp. 11–13 | No publicar cifras financieras aún |
+| INT-01 | Integración | Recibir entregas de Karla y Azael por contrato | Cada módulo tiene entradas, salidas, fuentes, pruebas y revisión registrada | implementado | sintética/local | Karla / Azael / Marlon | Revisión independiente de fuentes y publicación | `docs/INTEGRACION_CONSOLIDADA.md`, `cuidado/services/integraciones.py` | Revisar con el equipo |
+| DAT-04 | Movilidad | Movilidad/CONAPO con granularidad y CRS explícitos | Se distingue proyección de observación y no se confunde distancia con viaje | parcial | sintética/local | Karla / Marlon | Fuentes originales y cruce territorial de paradas pendientes | `cuidado/pipelines/entregas.py`, `docs/INTEGRACION_CONSOLIDADA.md` | Validar fuentes y CRS |
+| B2B-01 | Escenarios | B2B/B2G con fuentes, unidades y supuestos | Cada salida incluye resultado, unidad, periodo, supuestos, fuentes y método | parcial | sintética/local | Azael / Marlon | Costo de intervención y fuentes financieras pendientes | `cuidado/services/simulador_b2b_b2g.py`, `docs/INTEGRACION_CONSOLIDADA.md` | Documentar fuentes y completar costos |
 | DEP-01 | Despliegue | Ejecutar Streamlit desde repositorio activo | Existe evidencia de aplicación y configuración verificable | parcial | pendiente | Marlon | Cuenta, configuración y comprobación Cloud | `docs/STREAMLIT.md`, `Dockerfile` | Desplegar solo cuando se autorice |
 | ACA-03 | Entrega | Observatorio, programa, informe, presentación y referencias (PDF, pp. 4–5, 18) | Cada entregable tiene archivo, responsable, revisión y evidencia | parcial | pendiente | Equipo | Integración de UCA y revisión docente | PDF, `docs/`, README | Consolidar informe y presentación |
 
@@ -43,8 +43,9 @@ implican despliegue, uso con participantes ni validación docente.
    capacidad, explicabilidad y diferencias territoriales.
 5. **Privacidad:** falta dictamen, inventario de datos, base jurídica, matriz
    de riesgos, conservación/eliminación y controles de acceso.
-6. **Integración:** están pendientes las entregas de movilidad/CONAPO y
-   plantilla empresarial de Karla, y los simuladores/documentación de Azael.
+6. **Integración:** las entregas iniciales están incorporadas localmente;
+   permanecen pendientes la revisión de fuentes originales, el CRS de
+   movilidad y la publicación.
 7. **Despliegue:** no hay evidencia de aplicación Cloud, PostgreSQL remoto ni
    validación con usuarios.
 

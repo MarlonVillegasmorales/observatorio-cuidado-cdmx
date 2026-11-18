@@ -70,7 +70,7 @@ este proyecto.
 | Mapa por alcaldía | `cuidado/ui/app.py`, `cuidado/ui/mapa_alcaldias.py` | Implementado localmente con límites oficiales y población INEGI 2020; no es evaluación de impacto. |
 | Comparar zonas | `cuidado/ui/app.py` y `mostrar_comparativo_alcaldias` | Implementado con composición 0–4 y 60+ por cada 100 habitantes, referencia ponderada de CDMX y diferencias descriptivas; no es evaluación de impacto. |
 | Probar una búsqueda | `_render_busqueda` en `cuidado/ui/app.py` | Implementada como demo sintética de cuatro pasos; conserva valores y marca resultados pendientes al cambiar filtros. |
-| Información del proyecto | `cuidado/ui/app.py` e `INTEGRACIONES` | Visible; muestra entregas pendientes, no las convierte en módulos recibidos. |
+| Información del proyecto | `cuidado/ui/app.py` e `INTEGRACIONES` | Visible; distingue módulos integrados localmente de validación y publicación pendientes. |
 | ETL y datos preparados | `cuidado/pipelines/`, `data/processed/mapa_alcaldias/` | Código y artefactos reproducibles con fuentes oficiales de cartografía e INEGI 2020; infraestructura histórica excluida. |
 | Matching demostrativo | `cuidado/domain/centros.py`, `cuidado/services/simulacion.py` | Implementado y probado localmente; greedy por orden de solicitudes, no modelo predictivo entrenado. |
 | Persistencia y confirmación interna | `cuidado/database/`, `cuidado/services/vinculacion.py` | Código y pruebas locales; no está expuesto en la interfaz pública ni validado con PostgreSQL o personas reales. |
@@ -144,8 +144,9 @@ anonimiza ubicaciones. No se afirma cumplimiento legal completo.
 
 La ausencia de un módulo no elimina a su responsable. Las entregas deben
 distinguir recepción, revisión, integración y validación; los contratos están
-en [docs/CONTRATOS.md](docs/CONTRATOS.md). Las dos entregas de Karla y las de
-Azael siguen pendientes de recepción e integración según la evidencia local.
+en [docs/CONTRATOS.md](docs/CONTRATOS.md). Las entregas iniciales de Karla y Azael fueron recibidas e integradas
+localmente con validadores y límites explícitos; la revisión independiente de
+fuentes originales y la publicación siguen pendientes.
 
 El repositorio activo es
 [MarlonVillegasmorales/observatorio-cuidado-cdmx](https://github.com/MarlonVillegasmorales/observatorio-cuidado-cdmx),

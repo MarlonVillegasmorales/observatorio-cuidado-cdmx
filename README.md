@@ -53,6 +53,8 @@ La configuración del intérprete local está en
 
 ## Documentación relacionada
 
+- [Créditos y procedencia](CREDITOS.md)
+- [Integración consolidada](docs/INTEGRACION_CONSOLIDADA.md)
 - [Análisis del problema prototípico](docs/ANALISIS_PROBLEMA_PROTOTIPICO.md)
 - [Requisitos y avances](docs/REQUISITOS_Y_AVANCES.md)
 - [Arquitectura y límites](docs/ARQUITECTURA.md)
@@ -60,6 +62,7 @@ La configuración del intérprete local está en
 - [Inventario del repositorio](docs/INVENTARIO_REPOSITORIO.md)
 - [Evidencia del segundo avance](docs/SEGUNDO_AVANCE.md)
 - [Despliegue en Streamlit](docs/STREAMLIT.md)
+- [Cliente Flutter](cliente_flutter/README.md)
 
 ## Repositorio y procedencia
 
