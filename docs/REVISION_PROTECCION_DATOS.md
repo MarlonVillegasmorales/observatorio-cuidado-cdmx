@@ -29,3 +29,18 @@ Guía de revisión docente · Grupo 702 · 18 de noviembre de 2026
 - [INEGI, ENASIC 2022](https://www.inegi.org.mx/programas/enasic/2022/)
 
 Documento de trabajo consultado: Protección de datos personales y seguridad de la información, Observatorio de la Economía del Cuidado CDMX, grupo 702, noviembre de 2026, pp. 2–5.
+
+## Aviso del piloto y revisión de publicaciones
+
+Ambas aplicaciones leen `cliente_flutter/assets/privacidad/aviso.json` y el PDF indicado en su campo `archivo`. Para incorporar retroalimentación, sustituir el PDF, actualizar título, fecha, versión y estado en el JSON y comprobar ambas descargas después de reconstruir y desplegar. Git conserva las versiones anteriores. El informe académico de Karla, «Protección de datos personales y seguridad de la información», respalda la matriz y el protocolo y se conserva en el expediente del equipo.
+
+| Riesgo | Revisión antes de publicar | Evidencia |
+| --- | --- | --- |
+| Un contacto personal entra al directorio | Revisar columnas, texto libre y una muestra de fichas contra la fuente institucional. Retirar teléfonos particulares. | Fuente y versión revisadas. |
+| Una captura identifica a una familia | Inspeccionar la captura completa, ocultar identificadores y revisar el resultado exportado. | Captura revisada, fecha y persona revisora. |
+| Un cruce de indicadores identifica a una persona | Revisar grupos pequeños y agregar o suprimir resultados identificables. | Decisión y justificación. |
+| Un resultado sintético se interpreta como reserva | Recorrer la búsqueda hasta el resultado y comprobar la leyenda. | Pantalla y versión probadas. |
+
+En la mesa de revisión registrar responsable, hallazgo, corrección y evidencia antes de marcar el control como verificado. Si se detecta exposición, detener esa publicación, limitar el acceso, preservar evidencia restringida y escalar a quien corresponda.
+
+**Alcance técnico revisado.** El mapa principal usa cartografía preparada. Flutter envía criterios de ejemplo a `/api/matching` y parámetros del escenario a `/api/simular` cuando se ejecutan esas acciones. Streamlit mantiene filtros y resultados de búsqueda en la sesión; su configuración desactiva el envío de estadísticas de uso de Streamlit. Los registros de alojamiento, retención y configuración de analítica de producción requieren verificación del operador.

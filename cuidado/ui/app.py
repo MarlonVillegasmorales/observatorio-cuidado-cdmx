@@ -1,4 +1,5 @@
 """Composición de pantallas; sin ETL ni escrituras a la base operativa."""
+import json
 from pathlib import Path
 from datetime import time
 import pandas as pd
@@ -25,9 +26,11 @@ TAREAS = {
     "Búsqueda demo": "Demostración sintética, sin plazas reales.",
     "Simuladores": "Escenarios B2B/B2G sintéticos y no de impacto observado.",
     "Proyecto": "Fuentes, límites y estado académico.",
+    "Privacidad": "Información del directorio, demostraciones y piloto.",
 }
 
 ICONOS_TAREAS = {
+    "Privacidad": "",
     "Inicio": "⌂",
     "Mapa": "⌖",
     "Comparar": "≋",
@@ -36,6 +39,7 @@ ICONOS_TAREAS = {
     "Proyecto": "i",
 }
 CLAVES_NAVEGACION = {
+    "Privacidad": "privacidad",
     "Inicio": "inicio",
     "Mapa": "mapa",
     "Comparar": "comparar",
@@ -50,7 +54,7 @@ def _navegar(paso):
 def _render_busqueda():
     st.markdown('<div class="section-kicker">Exploración guiada · demostración</div>', unsafe_allow_html=True)
     st.header("Búsqueda demostrativa de cuidado")
-    st.caption("Explora cómo se comparan filtros con una oferta sintética. No es un servicio de reserva.")
+    st.caption("Prueba días y horarios de ejemplo. El resultado se calcula con oferta simulada y no genera una solicitud o reserva.")
     st.warning(
         "Demostración con datos sintéticos: una recomendación no confirma "
         "una plaza real ni registra personas."
@@ -171,7 +175,8 @@ def _render_inicio() -> None:
         ("Comparar alcaldías", "Comparar", "comparar", "Compara sedes con horario publicado y grupos de edad."),
         ("Probar búsqueda", "Búsqueda demo", "busqueda", "Calcula una recomendación sintética con el matching Python."),
     ]
-    columnas = st.columns(3)
+    accesos.append(("Cómo usamos los datos", "Privacidad", "privacidad", "Consulta la privacidad del mapa y el aviso del piloto."))
+    columnas = st.columns(len(accesos))
     for columna, (etiqueta, destino, clave, descripcion) in zip(columnas, accesos):
         with columna:
             st.markdown(f'<div class="action-card"><h3>{etiqueta}</h3><p>{descripcion}</p></div>', unsafe_allow_html=True)
@@ -224,7 +229,7 @@ def _render_simuladores() -> None:
     st.markdown('<div class="section-kicker">Escenarios sintéticos</div>', unsafe_allow_html=True)
     st.header("Simuladores B2B y B2G")
     st.info(
-        "Resultados demostrativos. No estiman impacto observado ni beneficio neto "
+        "Usa cifras hipotéticas o agregadas de la empresa. Los resultados demostrativos no estiman impacto observado ni beneficio neto "
         "cuando falta el costo de intervención."
     )
     try:
@@ -318,12 +323,26 @@ def _render_proyecto():
     st.subheader("Limitaciones esenciales")
     st.warning(
         "La infraestructura contabilizada no demuestra cupos disponibles; distancia geográfica no es tiempo de viaje; "
-        "la estimación territorial no mide abandono laboral ni causalidad. La aplicación no recoge datos personales."
+        "la estimación territorial no mide abandono laboral ni causalidad. El mapa se consulta sin llenar un registro familiar."
     )
     st.subheader("Estado académico")
     st.caption("Las entregas internas se muestran con su alcance real de integración.")
     st.dataframe(pd.DataFrame(INTEGRACIONES), hide_index=True, use_container_width=True)
     st.info("El matching usa el motor Python canónico. Los simuladores muestran resultados sintéticos y beneficio neto sólo con costo conocido.")
+
+def _render_privacidad():
+    carpeta = Path(__file__).resolve().parents[2] / "cliente_flutter/assets/privacidad"
+    aviso = json.loads((carpeta / "aviso.json").read_text(encoding="utf-8"))
+    st.header("Privacidad y uso de datos")
+    for bloque in aviso["bloques"]:
+        with st.container(border=True):
+            st.subheader(bloque["titulo"])
+            st.write(bloque["texto"])
+    st.markdown(f"**{aviso['titulo']}**")
+    st.caption(f"Versión {aviso['version']} · {aviso['estado']}")
+    st.download_button("Descargar aviso (PDF)", (carpeta / aviso["archivo"]).read_bytes(),
+                       file_name=aviso["archivo"], mime="application/pdf")
+
 
 def main():
     st.set_page_config(
@@ -347,14 +366,18 @@ def main():
     elif pagina == "Mapa":
         from cuidado.ui.mapa_alcaldias import mostrar_mapa_alcaldias
 
+        st.info("Elige una alcaldía. Los puntos representan sedes reales de cuidado. Las cifras de población son indicadores agregados por alcaldía.")
         mostrar_mapa_alcaldias()
     elif pagina == "Comparar":
         from cuidado.ui.mapa_alcaldias import mostrar_comparativo_alcaldias
 
+        st.info("Sedes con horario publicado indica qué proporción de centros documentó su horario. La disponibilidad de lugares requiere información de vacantes con fecha.")
         mostrar_comparativo_alcaldias()
     elif pagina=="Búsqueda demo":
         _render_busqueda()
     elif pagina == "Simuladores":
         _render_simuladores()
+    elif pagina == "Privacidad":
+        _render_privacidad()
     else:
         _render_proyecto()

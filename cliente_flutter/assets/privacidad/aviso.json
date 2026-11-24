@@ -1,0 +1,20 @@
+{
+  "titulo": "Aviso de privacidad propuesto para el piloto · noviembre de 2026",
+  "version": "1.0",
+  "estado": "Borrador académico sujeto a validación jurídica e institucional",
+  "archivo": "aviso.pdf",
+  "bloques": [
+    {
+      "titulo": "Datos del mapa y del directorio",
+      "texto": "Elige una alcaldía. Los puntos identifican instalaciones de cuidado y los indicadores describen poblaciones o sedes agrupadas. La ficha muestra la fuente y el periodo disponibles. La consulta se realiza sin proporcionar domicilio familiar, nombre de un menor ni información de salud."
+    },
+    {
+      "titulo": "Datos de las demostraciones",
+      "texto": "La búsqueda compara criterios de servicio, días, horario y distancia con una oferta simulada. El resultado no confirma cupos ni genera solicitudes o reservas. En los simuladores utiliza cifras hipotéticas o agregadas de la empresa."
+    },
+    {
+      "titulo": "Documentación del piloto",
+      "texto": "Karla elaboró esta propuesta para un futuro piloto. Quedan por definir el responsable, su domicilio y contacto, el procedimiento de acceso, rectificación, cancelación y oposición (ARCO), los destinatarios y la conservación de datos. El documento está abierto a revisión académica."
+    }
+  ]
+}
