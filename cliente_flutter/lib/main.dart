@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'oferta_infantil.dart';
+import 'privacidad.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -178,6 +179,11 @@ class _ObservatoryShellState extends State<ObservatoryShell> {
       appBar: AppBar(
         titleSpacing: wide ? 28 : 16,
         title: const _BrandHeader(),
+        actions: [PopupMenuButton<String>(
+          tooltip: 'Menú de información',
+          onSelected: (_) => mostrarPrivacidad(context),
+          itemBuilder: (_) => const [PopupMenuItem(value: 'privacidad', child: Text('Privacidad y uso de datos'))],
+        )],
       ),
       body: Row(
         children: [
@@ -313,7 +319,7 @@ class HomeScreen extends StatelessWidget {
             LayoutBuilder(builder: (context, constraints) {
               final columns = constraints.maxWidth >= 700 ? 3 : 1;
               return GridView.builder(
-                itemCount: 4,
+                itemCount: 5,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: columns,
                   crossAxisSpacing: 12,
@@ -327,6 +333,7 @@ class HomeScreen extends StatelessWidget {
                   _ActionCard(icon: Icons.compare_arrows, title: 'Comparar alcaldías', description: 'Compara sedes con horario publicado y grupos de edad.', onTap: () => onNavigate(2)),
                   _ActionCard(icon: Icons.search, title: 'Probar búsqueda', description: 'Recorre un ejemplo demostrativo de búsqueda.', onTap: () => onNavigate(3)),
                   _ActionCard(icon: Icons.calculate_outlined, title: 'Simuladores', description: 'Calcula escenarios B2B/B2G sintéticos.', onTap: () => onNavigate(4)),
+                  _ActionCard(icon: Icons.privacy_tip_outlined, title: 'Cómo usamos los datos', description: 'Consulta la privacidad del mapa y el aviso del piloto.', onTap: () => mostrarPrivacidad(context)),
                 ][index],
               );
             }),
@@ -440,7 +447,7 @@ class _MapScreenState extends State<MapScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _Notice(child: 'Elige una alcaldía para ver sus centros y horarios publicados.'),
+            const _Notice(child: 'Elige una alcaldía. Los puntos representan sedes reales de cuidado. Las cifras de población son indicadores agregados por alcaldía.'),
             const SizedBox(height: 14),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -873,7 +880,7 @@ class _CompareScreenState extends State<CompareScreen> {
         kicker: 'Comparación territorial',
         title: 'Compara dos alcaldías',
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const _Notice(child: 'Compara los centros con horario publicado y la población por edad.'),
+          const _Notice(child: 'Sedes con horario publicado indica qué proporción de centros documentó su horario. La disponibilidad de lugares requiere información de vacantes con fecha.'),
           const SizedBox(height: 16),
           LayoutBuilder(builder: (context, constraints) {
             final vertical = constraints.maxWidth < 560;
@@ -1038,9 +1045,9 @@ class _SearchScreenState extends State<SearchScreen> {
         kicker: 'Exploración guiada · demostración',
         title: 'Búsqueda demostrativa de cuidado',
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const _Notice(child: 'Explora cómo se comparan filtros con una oferta sintética. No es un servicio de reserva.'),
+          const _Notice(child: 'Elige el tipo de servicio. El ejemplo compara días, horarios y distancia con una oferta simulada.'),
           const SizedBox(height: 14),
-          const _Notice(child: 'Datos sintéticos: una recomendación no confirma una plaza real ni registra personas.'),
+          const _Notice(child: 'Resultado simulado. No confirma disponibilidad ni genera una solicitud o reserva.'),
           const SizedBox(height: 18),
           LinearProgressIndicator(value: (_step + 1) / 4, minHeight: 8, borderRadius: BorderRadius.circular(8), color: _brand, backgroundColor: _brandSoft),
           const SizedBox(height: 8),
@@ -1227,7 +1234,7 @@ class _SimulatorScreenState extends State<SimulatorScreen> {
         kicker: 'Escenarios sintéticos',
         title: 'Simuladores B2B y B2G',
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const _Notice(child: 'Estos resultados son ilustrativos. No estiman impacto observado ni beneficio neto sin costo de intervención.'),
+          const _Notice(child: 'Usa cifras hipotéticas o agregadas de la empresa. Estos resultados son ilustrativos. No estiman impacto observado ni beneficio neto sin costo de intervención.'),
           const SizedBox(height: 16),
           DropdownButtonFormField<int>(
             initialValue: _employees,
@@ -1347,7 +1354,7 @@ class ProjectScreen extends StatelessWidget {
           const SizedBox(height: 16),
           const _Card(child: Text('Limitaciones esenciales', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _ink))),
           const SizedBox(height: 8),
-          const _Notice(child: 'La infraestructura contabilizada no demuestra cupos disponibles; distancia geográfica no es tiempo de viaje; la estimación territorial no mide abandono laboral ni causalidad. No se recogen datos personales.'),
+          const _Notice(child: 'La infraestructura contabilizada no demuestra cupos disponibles; distancia geográfica no es tiempo de viaje; la estimación territorial no mide abandono laboral ni causalidad. La consulta del mapa no exige un registro familiar.'),
         ]),
       );
 }
