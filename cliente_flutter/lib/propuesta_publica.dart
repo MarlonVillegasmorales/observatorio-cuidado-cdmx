@@ -180,7 +180,7 @@ class _Bars extends StatelessWidget {
               Expanded(child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
-                  value: (row.value / maxValue).clamp(0.0, 1.0),
+                  value: (row.value / maxValue).clamp(0.0, 1.0).toDouble(),
                   minHeight: 13,
                   color: row.label == 'Iztapalapa' || row.label.startsWith('Actualiz.') ? _purple : _purpleDark,
                   backgroundColor: _purpleSoft,
