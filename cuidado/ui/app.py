@@ -426,6 +426,19 @@ def _render_alianza_publico_privada() -> None:
         st.write("No disponible en las fuentes públicas revisadas. La app no convierte los porcentajes hipotéticos anteriores en ahorro.")
         st.caption("Para demostrar ahorro se necesitan costos empresariales de reemplazo y medir permanencia antes y después del apoyo.")
 
+    st.subheader("Precedentes de participación empresarial")
+    pc1, pc2, pc3 = st.columns(3)
+    with pc1:
+        st.metric("Gentera · personal usuario", "54", "personas progenitoras · CDMX · 2024")
+    with pc2:
+        st.metric("Gentera · niñas y niños", "62", "atendidos en el centro · 2024")
+    with pc3:
+        st.metric("Grupo Coppel · apoyo escolar", "7,424", "hijas e hijos con apoyo de 50% · 2024")
+    st.caption(
+        "IFC también reportó 18 salas de lactancia en Grupo Coppel. Estos casos documentan prácticas empresariales; "
+        "no publican ahorro atribuible, efecto causal en rotación ni retorno financiero."
+    )
+
     st.subheader("Cómo se estructura el mecanismo")
     st.write(
         "En CECI en Empresa, la empresa aporta terreno, construcción y equipamiento; el IMSS cubre al patrón "
@@ -446,7 +459,9 @@ def _render_alianza_publico_privada() -> None:
             "- [Grupo BMV · Informe Anual Integrado 2025](https://www.bmv.com.mx/docs-pub/informeAnual/Informe%20Anual%20Integrado%20Grupo%20BMV_2025.pdf)\\n"
             "- [INEGI · Censos Económicos 2024, CDMX](https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2025/ce/CE_2024_Def_CdMx.pdf)\\n"
             "- [Data México · comercio minorista](https://www.economia.gob.mx/datamexico/es/profile/industry/retail-trade) · [hoteles y restaurantes](https://www.economia.gob.mx/datamexico/es/profile/industry/accommodation-and-food-services)\\n"
-            "- [IFC · caso Grupo Coppel](https://www.ifc.org/es/pressroom/2025/ifc-and-grupo-coppel-study)"
+            "- [IFC · caso Grupo Coppel](https://www.ifc.org/es/pressroom/2025/ifc-and-grupo-coppel-study)\\n"
+            "- [IFC · políticas empresariales de cuidado y caso Gentera](https://www.ifc.org/content/dam/ifc/doc/2025/family-friendly-policies-in-the-private-sector-in-mexico-en.pdf)\\n"
+            "- [Data México · hoteles y restaurantes](https://www.economia.gob.mx/datamexico/es/profile/industry/accommodation-and-food-services)"
         )
 
 
