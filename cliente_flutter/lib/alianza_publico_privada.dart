@@ -131,6 +131,19 @@ class _AlianzaPublicoPrivadaScreenState extends State<AlianzaPublicoPrivadaScree
           const Text('Los datos de rotación son nacionales, históricos y no están desglosados por sexo. Ayudan a priorizar sectores; no prueban rotación actual en Iztapalapa ni efecto del cuidado.', style: TextStyle(color: _muted, fontSize: 12, height: 1.4)),
         ])),
         const SizedBox(height: 14),
+        _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const _CardTitle('Precedentes de participación empresarial'),
+          const SizedBox(height: 8),
+          const Wrap(spacing: 8, runSpacing: 8, children: [
+            _Metric(title: 'Gentera · personal usuario', value: '54', note: 'personas progenitoras · 2024'),
+            _Metric(title: 'Gentera · niñas y niños', value: '62', note: 'atendidos · CDMX · 2024'),
+            _Metric(title: 'Coppel · apoyo escolar', value: '7,424', note: 'hijas e hijos con 50% de colegiatura'),
+            _Metric(title: 'Coppel · lactancia', value: '18', note: 'salas reportadas · 2024'),
+          ]),
+          const SizedBox(height: 8),
+          const Text('Documentan inversión y prestaciones privadas de cuidado. No publican ahorro atribuible ni efecto causal en rotación.', style: TextStyle(color: _muted, fontSize: 12, height: 1.4)),
+        ])),
+        const SizedBox(height: 14),
         const _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _CardTitle('Mecanismo y límites'),
           SizedBox(height: 8),
@@ -148,6 +161,9 @@ class _AlianzaPublicoPrivadaScreenState extends State<AlianzaPublicoPrivadaScree
           const _Source('Grupo BMV · Informe Anual Integrado 2025', 'https://www.bmv.com.mx/docs-pub/informeAnual/Informe%20Anual%20Integrado%20Grupo%20BMV_2025.pdf'),
           const _Source('INEGI · Censos Económicos 2024, CDMX', 'https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2025/ce/CE_2024_Def_CdMx.pdf'),
           const _Source('Data México · comercio minorista y hoteles/restaurantes', 'https://www.economia.gob.mx/datamexico/es/profile/industry/retail-trade'),
+          const _Source('Data México · hoteles y restaurantes', 'https://www.economia.gob.mx/datamexico/es/profile/industry/accommodation-and-food-services'),
+          const _Source('IFC · caso Gentera', 'https://www.ifc.org/content/dam/ifc/doc/2025/family-friendly-policies-in-the-private-sector-in-mexico-en.pdf'),
+          const _Source('IFC · caso Grupo Coppel', 'https://www.ifc.org/es/pressroom/2025/ifc-and-grupo-coppel-study'),
         ])),
       ]),
     );
