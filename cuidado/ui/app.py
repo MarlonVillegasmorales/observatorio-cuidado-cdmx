@@ -23,7 +23,7 @@ TAREAS = {
     "Inicio": "Una entrada breve para elegir qué explorar.",
     "Mapa": "Selecciona una alcaldía para consultar sus datos preparados.",
     "Comparar": "Ranking para identificar diferencias territoriales.",
-    "Búsqueda demo": "Demostración sintética, sin plazas reales.",
+    "Propuesta pública": "Brecha territorial y costos de operación para Iztapalapa.",
     "Simuladores": "Escenarios B2B/B2G sintéticos y no de impacto observado.",
     "Proyecto": "Fuentes, límites y estado académico.",
     "Privacidad": "Información del directorio, demostraciones y piloto.",
@@ -34,7 +34,7 @@ ICONOS_TAREAS = {
     "Inicio": "⌂",
     "Mapa": "⌖",
     "Comparar": "≋",
-    "Búsqueda demo": "⌕",
+    "Propuesta pública": "▦",
     "Simuladores": "↗",
     "Proyecto": "i",
 }
@@ -43,7 +43,7 @@ CLAVES_NAVEGACION = {
     "Inicio": "inicio",
     "Mapa": "mapa",
     "Comparar": "comparar",
-    "Búsqueda demo": "busqueda",
+    "Propuesta pública": "propuesta_publica",
     "Simuladores": "simuladores",
     "Proyecto": "proyecto",
 }
@@ -173,7 +173,7 @@ def _render_inicio() -> None:
     accesos = [
         ("Explorar mapa", "Mapa", "mapa", "Localiza centros y consulta sus horarios."),
         ("Comparar alcaldías", "Comparar", "comparar", "Compara sedes con horario publicado y grupos de edad."),
-        ("Probar búsqueda", "Búsqueda demo", "busqueda", "Calcula una recomendación sintética con el matching Python."),
+        ("Propuesta pública", "Propuesta pública", "propuesta_publica", "Consulta cobertura, brecha territorial y costo operativo en Iztapalapa."),
     ]
     accesos.append(("Cómo usamos los datos", "Privacidad", "privacidad", "Consulta la privacidad del mapa y el aviso del piloto."))
     columnas = st.columns(len(accesos))
@@ -223,6 +223,88 @@ def _render_navegacion(pagina: str) -> None:
                         _ir_a(opcion)
                         st.session_state["menu_abierto"] = False
                         st.rerun()
+
+
+def _render_propuesta_publica() -> None:
+    st.markdown('<div class="section-kicker">Piloto territorial · Iztapalapa</div>', unsafe_allow_html=True)
+    st.header("Propuesta pública de cuidado infantil")
+    st.info(
+        "La cobertura corresponde a CACI públicos para niñas y niños de 0 a 2 años en 2023. "
+        "La expansión propuesta por Evalúa considera población de 0 a 5 años."
+    )
+
+    metricas = [
+        ("Cobertura pública", "5.5%", "Iztapalapa · 0–2 años · 2023"),
+        ("Matrícula", "3,164", "niñas y niños · 2023"),
+        ("Población de referencia", "57,907", "niñas y niños · 0–2 años"),
+        ("CACI públicos", "48", "centros reportados · 2023"),
+    ]
+    cols = st.columns(4)
+    for col, (label, value, note) in zip(cols, metricas):
+        with col:
+            with st.container(border=True):
+                st.metric(label, value)
+                st.caption(note)
+
+    st.subheader("Brecha de cobertura")
+    cobertura = pd.DataFrame(
+        {"Cobertura (%)": [2.9, 5.5, 10.7]},
+        index=["Milpa Alta", "Iztapalapa", "Ciudad de México"],
+    )
+    st.bar_chart(cobertura, y="Cobertura (%)", use_container_width=True)
+    st.caption(
+        "Iztapalapa está por debajo del promedio de CDMX, pero no es la alcaldía con menor cobertura. "
+        "Milpa Alta registró 2.9%. Fuente: Evalúa CDMX, 2023."
+    )
+
+    st.subheader("Distancia media al CACI más cercano")
+    distancias = pd.DataFrame(
+        {"Distancia (m)": [2319, 1260, 906, 757, 2000]},
+        index=["Gobierno CDMX", "Alcaldía", "Privados", "Comunitarios", "CACI nacionales"],
+    )
+    st.bar_chart(distancias, y="Distancia (m)", use_container_width=True)
+    st.caption(
+        "Promedios de 2020 para colonias de zonas ampliadas de concentración infantil. "
+        "No representan recorridos por domicilio ni tiempos actuales de viaje. Fuente: Evalúa CDMX."
+    )
+
+    st.subheader("Expansión territorial propuesta")
+    expansion = [
+        ("41", "espacios para nuevos centros", "Propuesta de planeación; no instalaciones construidas."),
+        ("67,146", "niñas y niños de 0 a 5 años", "Población potencial, no usuarios confirmados."),
+        ("117", "plazas por centro tipo", "Referencia de costeo; requiere validación por inmueble."),
+    ]
+    cols = st.columns(3)
+    for col, (value, label, note) in zip(cols, expansion):
+        with col:
+            with st.container(border=True):
+                st.metric(label, value)
+                st.caption(note)
+
+    st.subheader("Costo anual de operación por centro")
+    costos = pd.DataFrame(
+        {"Millones de MXN": [13.72, 14.62]},
+        index=["Referencia a precios de 2024", "Actualización indicativa a oct. 2026"],
+    )
+    st.bar_chart(costos, y="Millones de MXN", use_container_width=True)
+    st.caption(
+        "Evalúa estimó $562.58 millones anuales para 41 centros propuestos, sin construcción. "
+        "El promedio aritmético es $13.72 millones por centro. La actualización a octubre de 2026 "
+        "es $14.62 millones por centro/año y $124,994 por plaza/año a ocupación plena. "
+        "Usa el INPC general; no es cotización, presupuesto aprobado ni costo total con obra."
+    )
+
+    with st.expander("Fuentes y límites"):
+        st.markdown(
+            "- [Evalúa CDMX · evaluación del sistema de cuidados](https://www.evalua.cdmx.gob.mx/storage/app/media/2024/se/ee/cuidados/evaluacion-cuidados-vf.pdf)\\n"
+            "- [Evalúa CDMX · opinión técnica de presupuesto 2024–2025](https://www.evalua.cdmx.gob.mx/storage/app/media/2024/se/opinion-de-presupuesto-para-2024-2025.pdf)\\n"
+            "- [INEGI · INPC octubre de 2026](https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2026/inpc/inpc_2q2026_11.pdf)\\n"
+            "- [INEGI · INPC diciembre de 2024](https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2025/inpc/inpc_2q2025_01.pdf)"
+        )
+        st.warning(
+            "Evalúa no publica el listado de los 41 sitios con nombre y coordenadas. "
+            "Siguen pendientes el inmueble, costo de obra, permisos, capacidad autorizada y presupuesto vigente."
+        )
 
 
 def _render_simuladores() -> None:
@@ -373,8 +455,8 @@ def main():
 
         st.info("Sedes con horario publicado indica qué proporción de centros documentó su horario. La disponibilidad de lugares requiere información de vacantes con fecha.")
         mostrar_comparativo_alcaldias()
-    elif pagina=="Búsqueda demo":
-        _render_busqueda()
+    elif pagina == "Propuesta pública":
+        _render_propuesta_publica()
     elif pagina == "Simuladores":
         _render_simuladores()
     elif pagina == "Privacidad":
