@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'oferta_infantil.dart';
 import 'privacidad.dart';
+import 'propuesta_publica.dart';
+import 'alianza_publico_privada.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -147,8 +149,8 @@ class _ObservatoryShellState extends State<ObservatoryShell> {
     NavigationDestination(key: Key('nav_inicio'), icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Inicio'),
     NavigationDestination(key: Key('nav_mapa'), icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Mapa'),
     NavigationDestination(key: Key('nav_comparar'), icon: Icon(Icons.compare_arrows), label: 'Comparar'),
-    NavigationDestination(key: Key('nav_busqueda'), icon: Icon(Icons.search), label: 'Búsqueda'),
-    NavigationDestination(key: Key('nav_simuladores'), icon: Icon(Icons.calculate_outlined), label: 'Simuladores'),
+    NavigationDestination(key: Key('nav_busqueda'), icon: Icon(Icons.account_balance_outlined), selectedIcon: Icon(Icons.account_balance), label: 'Propuesta pública'),
+    NavigationDestination(key: Key('nav_simuladores'), icon: Icon(Icons.handshake_outlined), label: 'Alianza'),
     NavigationDestination(key: Key('nav_proyecto'), icon: Icon(Icons.info_outline), selectedIcon: Icon(Icons.info), label: 'Proyecto'),
   ];
 
@@ -156,8 +158,8 @@ class _ObservatoryShellState extends State<ObservatoryShell> {
     NavigationRailDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: Text('Inicio')),
     NavigationRailDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: Text('Mapa')),
     NavigationRailDestination(icon: Icon(Icons.compare_arrows), label: Text('Comparar')),
-    NavigationRailDestination(icon: Icon(Icons.search), label: Text('Búsqueda demo')),
-    NavigationRailDestination(icon: Icon(Icons.calculate_outlined), label: Text('Simuladores')),
+    NavigationRailDestination(icon: Icon(Icons.account_balance_outlined), selectedIcon: Icon(Icons.account_balance), label: Text('Propuesta pública')),
+    NavigationRailDestination(icon: Icon(Icons.handshake_outlined), label: Text('Alianza público privada')),
     NavigationRailDestination(icon: Icon(Icons.info_outline), selectedIcon: Icon(Icons.info), label: Text('Proyecto')),
   ];
 
@@ -170,8 +172,8 @@ class _ObservatoryShellState extends State<ObservatoryShell> {
         HomeScreen(onNavigate: (index) => setState(() => _selectedIndex = index)),
         const MapScreen(),
         const CompareScreen(),
-        SearchScreen(matchingExecutor: widget.matchingExecutor),
-        SimulatorScreen(simulatorExecutor: widget.simulatorExecutor),
+        const PropuestaPublicaScreen(),
+        const AlianzaPublicoPrivadaScreen(),
         const ProjectScreen(),
       ],
     );
@@ -331,8 +333,8 @@ class HomeScreen extends StatelessWidget {
                 itemBuilder: (context, index) => [
                   _ActionCard(icon: Icons.map_outlined, title: 'Explorar mapa', description: 'Localiza centros y consulta sus horarios.', onTap: () => onNavigate(1)),
                   _ActionCard(icon: Icons.compare_arrows, title: 'Comparar alcaldías', description: 'Compara sedes con horario publicado y grupos de edad.', onTap: () => onNavigate(2)),
-                  _ActionCard(icon: Icons.search, title: 'Probar búsqueda', description: 'Recorre un ejemplo demostrativo de búsqueda.', onTap: () => onNavigate(3)),
-                  _ActionCard(icon: Icons.calculate_outlined, title: 'Simuladores', description: 'Calcula escenarios B2B/B2G sintéticos.', onTap: () => onNavigate(4)),
+                  _ActionCard(icon: Icons.account_balance_outlined, title: 'Propuesta pública', description: 'Consulta brecha territorial y costo operativo en Iztapalapa.', onTap: () => onNavigate(3)),
+                  _ActionCard(icon: Icons.handshake_outlined, title: 'Alianza público privada', description: 'Compara aportes y umbrales de viabilidad con datos publicados.', onTap: () => onNavigate(4)),
                   _ActionCard(icon: Icons.privacy_tip_outlined, title: 'Cómo usamos los datos', description: 'Consulta la privacidad del mapa y el aviso del piloto.', onTap: () => mostrarPrivacidad(context)),
                 ][index],
               );

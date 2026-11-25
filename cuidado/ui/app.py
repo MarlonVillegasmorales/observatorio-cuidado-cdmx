@@ -23,8 +23,8 @@ TAREAS = {
     "Inicio": "Una entrada breve para elegir qué explorar.",
     "Mapa": "Selecciona una alcaldía para consultar sus datos preparados.",
     "Comparar": "Ranking para identificar diferencias territoriales.",
-    "Búsqueda demo": "Demostración sintética, sin plazas reales.",
-    "Simuladores": "Escenarios B2B/B2G sintéticos y no de impacto observado.",
+    "Propuesta pública": "Brecha territorial y costos de operación para Iztapalapa.",
+    "Alianza público privada": "Reparto de costos, aportes empresariales y condiciones de viabilidad.",
     "Proyecto": "Fuentes, límites y estado académico.",
     "Privacidad": "Información del directorio, demostraciones y piloto.",
 }
@@ -34,8 +34,8 @@ ICONOS_TAREAS = {
     "Inicio": "⌂",
     "Mapa": "⌖",
     "Comparar": "≋",
-    "Búsqueda demo": "⌕",
-    "Simuladores": "↗",
+    "Propuesta pública": "▦",
+    "Alianza público privada": "⇄",
     "Proyecto": "i",
 }
 CLAVES_NAVEGACION = {
@@ -43,8 +43,8 @@ CLAVES_NAVEGACION = {
     "Inicio": "inicio",
     "Mapa": "mapa",
     "Comparar": "comparar",
-    "Búsqueda demo": "busqueda",
-    "Simuladores": "simuladores",
+    "Propuesta pública": "propuesta_publica",
+    "Alianza público privada": "alianza",
     "Proyecto": "proyecto",
 }
 
@@ -173,7 +173,8 @@ def _render_inicio() -> None:
     accesos = [
         ("Explorar mapa", "Mapa", "mapa", "Localiza centros y consulta sus horarios."),
         ("Comparar alcaldías", "Comparar", "comparar", "Compara sedes con horario publicado y grupos de edad."),
-        ("Probar búsqueda", "Búsqueda demo", "busqueda", "Calcula una recomendación sintética con el matching Python."),
+        ("Propuesta pública", "Propuesta pública", "propuesta_publica", "Consulta cobertura, brecha territorial y costo operativo en Iztapalapa."),
+        ("Alianza público privada", "Alianza público privada", "alianza", "Explora aportes, escenarios de consorcio y el umbral de comparación laboral."),
     ]
     accesos.append(("Cómo usamos los datos", "Privacidad", "privacidad", "Consulta la privacidad del mapa y el aviso del piloto."))
     columnas = st.columns(len(accesos))
@@ -223,6 +224,245 @@ def _render_navegacion(pagina: str) -> None:
                         _ir_a(opcion)
                         st.session_state["menu_abierto"] = False
                         st.rerun()
+
+
+def _render_propuesta_publica() -> None:
+    st.markdown('<div class="section-kicker">Piloto territorial · Iztapalapa</div>', unsafe_allow_html=True)
+    st.header("Propuesta pública de cuidado infantil")
+    st.info(
+        "La cobertura corresponde a CACI públicos para niñas y niños de 0 a 2 años en 2023. "
+        "La expansión propuesta por Evalúa considera población de 0 a 5 años."
+    )
+
+    metricas = [
+        ("Cobertura pública", "5.5%", "Iztapalapa · 0–2 años · 2023"),
+        ("Matrícula", "3,164", "niñas y niños · 2023"),
+        ("Población de referencia", "57,907", "niñas y niños · 0–2 años"),
+        ("CACI públicos", "48", "centros reportados · 2023"),
+    ]
+    cols = st.columns(4)
+    for col, (label, value, note) in zip(cols, metricas):
+        with col:
+            with st.container(border=True):
+                st.metric(label, value)
+                st.caption(note)
+
+    st.subheader("Brecha de cobertura")
+    cobertura = pd.DataFrame(
+        {"Cobertura (%)": [2.9, 5.5, 10.7]},
+        index=["Milpa Alta", "Iztapalapa", "Ciudad de México"],
+    )
+    st.bar_chart(cobertura, y="Cobertura (%)", use_container_width=True)
+    st.caption(
+        "Iztapalapa está por debajo del promedio de CDMX, pero no es la alcaldía con menor cobertura. "
+        "Milpa Alta registró 2.9%. Fuente: Evalúa CDMX, 2023."
+    )
+
+    st.subheader("Distancia media al CACI más cercano")
+    distancias = pd.DataFrame(
+        {"Distancia (m)": [2319, 1260, 906, 757, 2000]},
+        index=["Gobierno CDMX", "Alcaldía", "Privados", "Comunitarios", "CACI nacionales"],
+    )
+    st.bar_chart(distancias, y="Distancia (m)", use_container_width=True)
+    st.caption(
+        "Promedios de 2020 para colonias de zonas ampliadas de concentración infantil. "
+        "No representan recorridos por domicilio ni tiempos actuales de viaje. Fuente: Evalúa CDMX."
+    )
+
+    st.subheader("Expansión territorial propuesta")
+    expansion = [
+        ("41", "espacios para nuevos centros", "Propuesta de planeación; no instalaciones construidas."),
+        ("67,146", "niñas y niños de 0 a 5 años", "Población potencial, no usuarios confirmados."),
+        ("117", "plazas por centro tipo", "Referencia de costeo; requiere validación por inmueble."),
+    ]
+    cols = st.columns(3)
+    for col, (value, label, note) in zip(cols, expansion):
+        with col:
+            with st.container(border=True):
+                st.metric(label, value)
+                st.caption(note)
+
+    st.subheader("Costo anual de operación por centro")
+    costos = pd.DataFrame(
+        {"Millones de MXN": [13.72, 14.62]},
+        index=["Referencia a precios de 2024", "Actualización indicativa a oct. 2026"],
+    )
+    st.bar_chart(costos, y="Millones de MXN", use_container_width=True)
+    st.caption(
+        "Evalúa estimó $562.58 millones anuales para 41 centros propuestos, sin construcción. "
+        "El promedio aritmético es $13.72 millones por centro. La actualización a octubre de 2026 "
+        "es $14.62 millones por centro/año y $124,994 por plaza/año a ocupación plena. "
+        "Usa el INPC general; no es cotización, presupuesto aprobado ni costo total con obra."
+    )
+
+    with st.expander("Fuentes y límites"):
+        st.markdown(
+            "- [Evalúa CDMX · evaluación del sistema de cuidados](https://www.evalua.cdmx.gob.mx/storage/app/media/2024/se/ee/cuidados/evaluacion-cuidados-vf.pdf)\\n"
+            "- [Evalúa CDMX · opinión técnica de presupuesto 2024–2025](https://www.evalua.cdmx.gob.mx/storage/app/media/2024/se/opinion-de-presupuesto-para-2024-2025.pdf)\\n"
+            "- [INEGI · INPC octubre de 2026](https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2026/inpc/inpc_2q2026_11.pdf)\\n"
+            "- [INEGI · INPC diciembre de 2024](https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2025/inpc/inpc_2q2025_01.pdf)"
+        )
+        st.warning(
+            "Evalúa no publica el listado de los 41 sitios con nombre y coordenadas. "
+            "Siguen pendientes el inmueble, costo de obra, permisos, capacidad autorizada y presupuesto vigente."
+        )
+
+
+def _render_alianza_publico_privada() -> None:
+    import matplotlib.pyplot as plt
+
+    costo = 14_624_331.31
+    costo_contratacion = 33_934
+    st.markdown('<div class="section-kicker">Modelo de coparticipación · Iztapalapa</div>', unsafe_allow_html=True)
+    st.header("Alianza público privada")
+    st.info(
+        "Este modelo distribuye el costo operativo estimado de un centro tipo. "
+        "Es un escenario de diseño: no representa un convenio, presupuesto aprobado ni ahorro observado."
+    )
+
+    col_reparto, col_empresas = st.columns(2)
+    with col_reparto:
+        porcentaje_privado = st.select_slider(
+            "Porcentaje del costo aportado por empresas",
+            options=[25, 50, 75],
+            value=25,
+            format_func=lambda value: f"{value}% empresas / {100 - value}% público",
+            key="alianza_porcentaje_privado",
+        )
+    with col_empresas:
+        numero_empresas = st.select_slider(
+            "Empresas participantes",
+            options=[10, 20, 40],
+            value=40,
+            format_func=lambda value: f"{value} empresas",
+            key="alianza_numero_empresas",
+        )
+
+    aporte_privado = costo * porcentaje_privado / 100
+    aporte_publico = costo - aporte_privado
+    por_empresa = aporte_privado / numero_empresas
+    equivalentes_contratacion = por_empresa / costo_contratacion
+
+    st.subheader("Reparto anual del costo")
+    fig, ax = plt.subplots(figsize=(8.2, 1.35))
+    ax.barh(["Operación de un centro tipo"], [aporte_publico / 1_000_000], color="#4C1D95", label="Gobierno")
+    ax.barh(
+        ["Operación de un centro tipo"],
+        [aporte_privado / 1_000_000],
+        left=[aporte_publico / 1_000_000],
+        color="#A78BFA",
+        label="Empresas",
+    )
+    ax.set_xlim(0, costo / 1_000_000 * 1.04)
+    ax.set_xlabel("Millones de MXN al año")
+    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.03), ncol=2, frameon=False)
+    ax.spines[["top", "right", "left"]].set_visible(False)
+    ax.tick_params(axis="y", length=0)
+    ax.grid(axis="x", alpha=0.18)
+    ax.set_axisbelow(True)
+    fig.tight_layout()
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.metric("Aportación pública", f"${aporte_publico:,.0f}", f"{100 - porcentaje_privado}% del costo")
+    with c2:
+        st.metric("Aportación empresarial conjunta", f"${aporte_privado:,.0f}", f"{porcentaje_privado}% del costo")
+    with c3:
+        st.metric("Aporte anual por empresa", f"${por_empresa:,.0f}", f"si participan {numero_empresas}")
+
+    with st.container(border=True):
+        st.subheader("Umbral para comparar con contratación")
+        st.metric(
+            "Contrataciones equivalentes por empresa",
+            f"{equivalentes_contratacion:.1f}",
+            f"Aporte anual ÷ ${costo_contratacion:,.0f}",
+        )
+        st.caption(
+            "Grupo BMV reportó un promedio de  $33,934 por contratación a partir de 127 vacantes cubiertas "
+            "(91 externas). Es una referencia parcial, no el costo completo de reemplazo. "
+            "La equivalencia no indica cuántas salidas ocurren o se evitarían."
+        )
+
+    st.subheader("Aporte por empresa según tamaño del consorcio")
+    cantidades = [10, 20, 40]
+    aportes = [aporte_privado / n for n in cantidades]
+    fig, ax = plt.subplots(figsize=(7.5, 3.2))
+    barras = ax.bar([str(n) for n in cantidades], aportes, color=["#4C1D95", "#8B5CF6", "#A78BFA"])
+    ax.set_xticks(range(len(cantidades)), [f"{n} empresas" for n in cantidades])
+    ax.set_ylabel("MXN por empresa / año")
+    ax.set_title(f"Aporte privado total: ${aporte_privado:,.0f} por año")
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", alpha=0.18)
+    ax.set_axisbelow(True)
+    for barra, valor in zip(barras, aportes):
+        ax.text(barra.get_x() + barra.get_width() / 2, valor, f"${valor:,.0f}", ha="center", va="bottom", fontsize=9)
+    fig.tight_layout()
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
+
+    st.subheader("Sectores candidatos para orientar el piloto")
+    st.caption("La participación femenina es de CDMX (2023); la rotación es nacional (Censo Económico 2019), total y sin desglose por sexo.")
+    sectores = pd.DataFrame({
+        "Comercio minorista": [16.5, 25.1, 30.6, 28.8],
+        "Hoteles y restaurantes": [13.1, 27.2, 39.4, 38.3],
+    }, index=["Hasta 10 personas", "11–50", "51–250", "251 o más"])
+    fig, ax = plt.subplots(figsize=(8, 3.4))
+    sectores.plot(kind="bar", ax=ax, color=["#4C1D95", "#A78BFA"], width=0.78)
+    ax.set_ylabel("Rotación total (%)")
+    ax.set_xlabel("Personas ocupadas por establecimiento · México · 2019")
+    ax.legend(frameon=False)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", alpha=0.18)
+    ax.set_axisbelow(True)
+    fig.tight_layout()
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
+    st.caption("En CDMX, las mujeres fueron 47.0% del personal de comercio minorista y 48.2% en hoteles y restaurantes en 2023. Estos indicadores orientan sectores; no prueban rotación actual de trabajadoras en Iztapalapa ni efecto del cuidado.")
+
+    with st.container(border=True):
+        st.subheader("Ahorro observado por menor rotación")
+        st.write("No disponible en las fuentes públicas revisadas. La app no convierte los porcentajes hipotéticos anteriores en ahorro.")
+        st.caption("Para demostrar ahorro se necesitan costos empresariales de reemplazo y medir permanencia antes y después del apoyo.")
+
+    st.subheader("Precedentes de participación empresarial")
+    pc1, pc2, pc3 = st.columns(3)
+    with pc1:
+        st.metric("Gentera · personal usuario", "54", "personas progenitoras · CDMX · 2024")
+    with pc2:
+        st.metric("Gentera · niñas y niños", "62", "atendidos en el centro · 2024")
+    with pc3:
+        st.metric("Grupo Coppel · apoyo escolar", "7,424", "hijas e hijos con apoyo de 50% · 2024")
+    st.caption(
+        "IFC también reportó 18 salas de lactancia en Grupo Coppel. Estos casos documentan prácticas empresariales; "
+        "no publican ahorro atribuible, efecto causal en rotación ni retorno financiero."
+    )
+
+    st.subheader("Cómo se estructura el mecanismo")
+    st.write(
+        "En CECI en Empresa, la empresa aporta terreno, construcción y equipamiento; el IMSS cubre al patrón "
+        "una cuota mensual por niña o niño inscrito conforme al convenio, y participa en regulación y capacitación. "
+        "La cuota se determina en el convenio: aquí no se fija una tarifa universal."
+    )
+    st.warning(
+        "El anuncio de recuperación en cinco años supone ocupación del 100% y es una proyección, no un retorno "
+        "medido en Iztapalapa. El costo usado en esta pantalla es operación indicativa y excluye construcción, "
+        "remodelación, administración empresarial y aportaciones contractuales del IMSS."
+    )
+
+    with st.expander("Fuentes y límites"):
+        st.markdown(
+            "- [Evalúa CDMX · costo y propuesta territorial](https://www.evalua.cdmx.gob.mx/storage/app/media/2024/se/ee/cuidados/evaluacion-cuidados-vf.pdf)\\n"
+            "- [IMSS · acuerdo de CECI en Empresa, 2026](https://sidof.segob.gob.mx/notas/docFuente/5784757)\\n"
+            "- [Secretaría de Economía · modelo CECI en Empresa](https://www.gob.mx/se/prensa/economia-el-bid-y-la-cepal-impulsan-la-construccion-de-infraestructura-de-cuidados-en-empresas-y-parques-industriales?idiom=es-MX)\\n"
+            "- [Grupo BMV · Informe Anual Integrado 2025](https://www.bmv.com.mx/docs-pub/informeAnual/Informe%20Anual%20Integrado%20Grupo%20BMV_2025.pdf)\\n"
+            "- [INEGI · Censos Económicos 2024, CDMX](https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2025/ce/CE_2024_Def_CdMx.pdf)\\n"
+            "- [Data México · comercio minorista](https://www.economia.gob.mx/datamexico/es/profile/industry/retail-trade) · [hoteles y restaurantes](https://www.economia.gob.mx/datamexico/es/profile/industry/accommodation-and-food-services)\\n"
+            "- [IFC · caso Grupo Coppel](https://www.ifc.org/es/pressroom/2025/ifc-and-grupo-coppel-study)\\n"
+            "- [IFC · políticas empresariales de cuidado y caso Gentera](https://www.ifc.org/content/dam/ifc/doc/2025/family-friendly-policies-in-the-private-sector-in-mexico-en.pdf)\\n"
+            "- [Data México · hoteles y restaurantes](https://www.economia.gob.mx/datamexico/es/profile/industry/accommodation-and-food-services)"
+        )
 
 
 def _render_simuladores() -> None:
@@ -373,10 +613,10 @@ def main():
 
         st.info("Sedes con horario publicado indica qué proporción de centros documentó su horario. La disponibilidad de lugares requiere información de vacantes con fecha.")
         mostrar_comparativo_alcaldias()
-    elif pagina=="Búsqueda demo":
-        _render_busqueda()
-    elif pagina == "Simuladores":
-        _render_simuladores()
+    elif pagina == "Propuesta pública":
+        _render_propuesta_publica()
+    elif pagina == "Alianza público privada":
+        _render_alianza_publico_privada()
     elif pagina == "Privacidad":
         _render_privacidad()
     else:
