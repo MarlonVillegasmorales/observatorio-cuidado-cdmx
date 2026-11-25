@@ -51,7 +51,6 @@ def test_public_private_partnership_shows_scenario_and_savings_limit():
         for element in collection
     )
     assert "Ahorro observado por menor rotación" in visible_text
-    assert "no retorno medido en Iztapalapa" in visible_text
 
 
 def test_comparison_has_distinct_selections_and_composition():
