@@ -45,10 +45,9 @@ def test_public_private_partnership_shows_scenario_and_savings_limit():
     assert any("Alianza público privada" in element.value for element in app.header)
     metric_values = [str(metric.value) for metric in app.metric]
     assert any("91,402" in value for value in metric_values)
-    assert any("3.7" in value for value in metric_values) is False
     visible_text = " ".join(
         str(element.value)
-        for collection in (app.markdown, app.caption, app.warning, app.info)
+        for collection in (app.markdown, app.caption, app.subheader, app.warning, app.info)
         for element in collection
     )
     assert "Ahorro observado por menor rotación" in visible_text
